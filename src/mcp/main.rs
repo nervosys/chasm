@@ -52,7 +52,7 @@ use chasm::mcp::server::McpServer;
 
 fn main() {
     let mut server = McpServer::new();
-    
+
     if let Err(e) = server.run() {
         eprintln!("[csm-mcp] Server error: {}", e);
         std::process::exit(1);

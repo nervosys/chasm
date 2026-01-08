@@ -8,7 +8,9 @@
 
 use crate::agency::agent::{Agent, AgentStatus};
 use crate::agency::error::{AgencyError, AgencyResult};
-use crate::agency::models::{AgencyEvent, AgencyMessage, EventType, MessageRole, ToolCall, ToolResult, TokenUsage};
+use crate::agency::models::{
+    AgencyEvent, AgencyMessage, EventType, MessageRole, TokenUsage, ToolCall, ToolResult,
+};
 use crate::agency::session::{generate_message_id, Session};
 use crate::agency::tools::ToolRegistry;
 use chrono::Utc;
@@ -262,26 +264,26 @@ impl Executor {
     /// Call the model using the appropriate provider
     async fn call_model(&self, agent: &Agent, session: &Session) -> AgencyResult<ModelResponse> {
         use crate::agency::models::ModelProvider;
-        
+
         let messages = session.to_api_messages();
         let tools = agent.tool_definitions();
         let model_config = agent.model();
-        
+
         // Build request body
         let mut request_body = serde_json::json!({
             "model": model_config.model,
             "messages": messages,
             "temperature": model_config.temperature,
         });
-        
+
         if let Some(max_tokens) = model_config.max_tokens {
             request_body["max_tokens"] = serde_json::json!(max_tokens);
         }
-        
+
         if !tools.is_empty() {
             request_body["tools"] = serde_json::json!(tools);
         }
-        
+
         // Determine endpoint based on provider
         let endpoint = match model_config.provider {
             // Cloud Providers
@@ -293,51 +295,78 @@ impl Executor {
             ),
             ModelProvider::Groq => "https://api.groq.com/openai/v1/chat/completions".to_string(),
             ModelProvider::Together => "https://api.together.xyz/v1/chat/completions".to_string(),
-            ModelProvider::Fireworks => "https://api.fireworks.ai/inference/v1/chat/completions".to_string(),
+            ModelProvider::Fireworks => {
+                "https://api.fireworks.ai/inference/v1/chat/completions".to_string()
+            }
             ModelProvider::DeepSeek => "https://api.deepseek.com/v1/chat/completions".to_string(),
             ModelProvider::Mistral => "https://api.mistral.ai/v1/chat/completions".to_string(),
             ModelProvider::Cohere => "https://api.cohere.ai/v1/chat".to_string(),
             ModelProvider::Perplexity => "https://api.perplexity.ai/chat/completions".to_string(),
             ModelProvider::Azure => model_config.endpoint.clone().unwrap_or_default(),
-            
+
             // Local Providers (OpenAI-compatible)
-            ModelProvider::Ollama => model_config.endpoint.clone()
+            ModelProvider::Ollama => model_config
+                .endpoint
+                .clone()
                 .unwrap_or_else(|| "http://localhost:11434/api/chat".to_string()),
-            ModelProvider::LMStudio => model_config.endpoint.clone()
+            ModelProvider::LMStudio => model_config
+                .endpoint
+                .clone()
                 .unwrap_or_else(|| "http://localhost:1234/v1/chat/completions".to_string()),
-            ModelProvider::Jan => model_config.endpoint.clone()
+            ModelProvider::Jan => model_config
+                .endpoint
+                .clone()
                 .unwrap_or_else(|| "http://localhost:1337/v1/chat/completions".to_string()),
-            ModelProvider::GPT4All => model_config.endpoint.clone()
+            ModelProvider::GPT4All => model_config
+                .endpoint
+                .clone()
                 .unwrap_or_else(|| "http://localhost:4891/v1/chat/completions".to_string()),
-            ModelProvider::LocalAI => model_config.endpoint.clone()
+            ModelProvider::LocalAI => model_config
+                .endpoint
+                .clone()
                 .unwrap_or_else(|| "http://localhost:8080/v1/chat/completions".to_string()),
-            ModelProvider::Llamafile => model_config.endpoint.clone()
+            ModelProvider::Llamafile => model_config
+                .endpoint
+                .clone()
                 .unwrap_or_else(|| "http://localhost:8080/v1/chat/completions".to_string()),
-            ModelProvider::TextGenWebUI => model_config.endpoint.clone()
+            ModelProvider::TextGenWebUI => model_config
+                .endpoint
+                .clone()
                 .unwrap_or_else(|| "http://localhost:5000/v1/chat/completions".to_string()),
-            ModelProvider::VLLM => model_config.endpoint.clone()
+            ModelProvider::VLLM => model_config
+                .endpoint
+                .clone()
                 .unwrap_or_else(|| "http://localhost:8000/v1/chat/completions".to_string()),
-            ModelProvider::KoboldCpp => model_config.endpoint.clone()
+            ModelProvider::KoboldCpp => model_config
+                .endpoint
+                .clone()
                 .unwrap_or_else(|| "http://localhost:5001/v1/chat/completions".to_string()),
-            ModelProvider::TabbyML => model_config.endpoint.clone()
+            ModelProvider::TabbyML => model_config
+                .endpoint
+                .clone()
                 .unwrap_or_else(|| "http://localhost:8080/v1/chat/completions".to_string()),
-            ModelProvider::Exo => model_config.endpoint.clone()
+            ModelProvider::Exo => model_config
+                .endpoint
+                .clone()
                 .unwrap_or_else(|| "http://localhost:52415/v1/chat/completions".to_string()),
-            
+
             // Generic
-            ModelProvider::OpenAICompatible | ModelProvider::Custom => {
-                model_config.endpoint.clone().unwrap_or_else(|| "http://localhost:8080/v1/chat/completions".to_string())
-            }
+            ModelProvider::OpenAICompatible | ModelProvider::Custom => model_config
+                .endpoint
+                .clone()
+                .unwrap_or_else(|| "http://localhost:8080/v1/chat/completions".to_string()),
         };
-        
+
         if endpoint.is_empty() {
-            return Err(AgencyError::ConfigError("No endpoint configured for model provider".to_string()));
+            return Err(AgencyError::ConfigError(
+                "No endpoint configured for model provider".to_string(),
+            ));
         }
-        
+
         // Make HTTP request
         let client = reqwest::Client::new();
         let mut request = client.post(&endpoint).json(&request_body);
-        
+
         // Add authentication
         if let Some(api_key) = &model_config.api_key {
             match model_config.provider {
@@ -347,47 +376,53 @@ impl Executor {
                 }
                 ModelProvider::Google => {
                     // Google uses query parameter for API key
-                    request = client.post(format!("{}?key={}", endpoint, api_key)).json(&request_body);
+                    request = client
+                        .post(format!("{}?key={}", endpoint, api_key))
+                        .json(&request_body);
                 }
                 _ => {
                     request = request.header("Authorization", format!("Bearer {}", api_key));
                 }
             }
         }
-        
-        let response = request.send().await.map_err(|e| {
-            AgencyError::NetworkError(format!("HTTP request failed: {}", e))
-        })?;
-        
+
+        let response = request
+            .send()
+            .await
+            .map_err(|e| AgencyError::NetworkError(format!("HTTP request failed: {}", e)))?;
+
         if !response.status().is_success() {
             let status = response.status();
             let body: String = response.text().await.unwrap_or_default();
             return Err(AgencyError::ModelError(format!(
-                "Model API error ({}): {}", status, body
+                "Model API error ({}): {}",
+                status, body
             )));
         }
-        
-        let response_body: serde_json::Value = response.json().await.map_err(|e| {
-            AgencyError::ModelError(format!("Failed to parse response: {}", e))
-        })?;
-        
+
+        let response_body: serde_json::Value = response
+            .json()
+            .await
+            .map_err(|e| AgencyError::ModelError(format!("Failed to parse response: {}", e)))?;
+
         // Parse response based on provider format
-        let (content, tool_calls, usage) = Self::parse_model_response(&response_body, &model_config.provider)?;
-        
+        let (content, tool_calls, usage) =
+            Self::parse_model_response(&response_body, &model_config.provider)?;
+
         Ok(ModelResponse {
             content,
             tool_calls,
             usage,
         })
     }
-    
+
     /// Parse model response based on provider format
     fn parse_model_response(
         response: &serde_json::Value,
         provider: &crate::agency::models::ModelProvider,
     ) -> AgencyResult<(String, Vec<ToolCall>, TokenUsage)> {
         use crate::agency::models::ModelProvider;
-        
+
         match provider {
             ModelProvider::Anthropic => {
                 // Anthropic format
@@ -422,8 +457,12 @@ impl Executor {
                     .unwrap_or("")
                     .to_string();
                 let usage = TokenUsage::new(
-                    response["usageMetadata"]["promptTokenCount"].as_u64().unwrap_or(0) as u32,
-                    response["usageMetadata"]["candidatesTokenCount"].as_u64().unwrap_or(0) as u32,
+                    response["usageMetadata"]["promptTokenCount"]
+                        .as_u64()
+                        .unwrap_or(0) as u32,
+                    response["usageMetadata"]["candidatesTokenCount"]
+                        .as_u64()
+                        .unwrap_or(0) as u32,
                 );
                 // Parse function calls for Google
                 let mut tool_calls = vec![];
@@ -448,7 +487,7 @@ impl Executor {
                     .as_str()
                     .unwrap_or("")
                     .to_string();
-                
+
                 let mut tool_calls = vec![];
                 if let Some(calls) = choice["message"]["tool_calls"].as_array() {
                     for call in calls {
@@ -456,18 +495,19 @@ impl Executor {
                             id: call["id"].as_str().unwrap_or("").to_string(),
                             name: call["function"]["name"].as_str().unwrap_or("").to_string(),
                             arguments: serde_json::from_str(
-                                call["function"]["arguments"].as_str().unwrap_or("{}")
-                            ).unwrap_or_default(),
+                                call["function"]["arguments"].as_str().unwrap_or("{}"),
+                            )
+                            .unwrap_or_default(),
                             timestamp: Utc::now(),
                         });
                     }
                 }
-                
+
                 let usage = TokenUsage::new(
                     response["usage"]["prompt_tokens"].as_u64().unwrap_or(0) as u32,
                     response["usage"]["completion_tokens"].as_u64().unwrap_or(0) as u32,
                 );
-                
+
                 Ok((content, tool_calls, usage))
             }
         }

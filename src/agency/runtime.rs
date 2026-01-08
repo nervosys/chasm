@@ -102,7 +102,8 @@ impl Runtime {
 
     /// Register an agent
     pub fn register_agent(&mut self, agent: Agent) {
-        self.agents.insert(agent.name().to_string(), Arc::new(agent));
+        self.agents
+            .insert(agent.name().to_string(), Arc::new(agent));
     }
 
     /// Get a registered agent
@@ -199,7 +200,9 @@ impl Runtime {
         ctx.allow_tools = options.allow_tools;
         ctx.event_sender = options.event_sender;
 
-        self.orchestrator.run_pipeline(pipeline, input, &mut ctx).await
+        self.orchestrator
+            .run_pipeline(pipeline, input, &mut ctx)
+            .await
     }
 
     /// Run a swarm
@@ -221,7 +224,11 @@ impl Runtime {
     }
 
     /// Create a new session for an agent
-    pub fn create_session(&self, agent_name: &str, user_id: Option<String>) -> AgencyResult<Session> {
+    pub fn create_session(
+        &self,
+        agent_name: &str,
+        user_id: Option<String>,
+    ) -> AgencyResult<Session> {
         self.session_manager.create(agent_name, user_id)
     }
 
@@ -231,7 +238,11 @@ impl Runtime {
     }
 
     /// List sessions for an agent
-    pub fn list_sessions(&self, agent_name: &str, limit: Option<u32>) -> AgencyResult<Vec<Session>> {
+    pub fn list_sessions(
+        &self,
+        agent_name: &str,
+        limit: Option<u32>,
+    ) -> AgencyResult<Vec<Session>> {
         self.session_manager.list_by_agent(agent_name, limit)
     }
 
@@ -325,7 +336,9 @@ mod tests {
             .with_session(&session.id)
             .with_user("user1");
 
-        let result = runtime.run("test_agent", "Test message", Some(options)).await?;
+        let result = runtime
+            .run("test_agent", "Test message", Some(options))
+            .await?;
         assert!(result.success);
 
         // Verify session was updated

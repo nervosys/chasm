@@ -20,16 +20,16 @@
 //! - **Travel**: Maps, Uber, Flights
 //! - **Shopping**: Amazon, Groceries
 
+pub mod browser;
+pub mod communication;
 pub mod hooks;
 pub mod productivity;
-pub mod communication;
-pub mod browser;
+pub mod registry;
 pub mod smart_home;
 pub mod system;
-pub mod registry;
 
-pub use hooks::{Hook, HookConfig, HookResult, HookTrigger, HookAction};
-pub use registry::{IntegrationRegistry, Integration, IntegrationCategory, IntegrationStatus};
+pub use hooks::{Hook, HookAction, HookConfig, HookResult, HookTrigger};
+pub use registry::{Integration, IntegrationCategory, IntegrationRegistry, IntegrationStatus};
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

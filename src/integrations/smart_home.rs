@@ -120,28 +120,46 @@ pub trait HomeAssistantProvider: Send + Sync {
     async fn list_entities(&self, domain: Option<&str>) -> IntegrationResult;
     async fn get_state(&self, entity_id: &str) -> IntegrationResult;
     async fn get_history(&self, entity_id: &str, start: &str, end: &str) -> IntegrationResult;
-    
+
     // Services
     async fn list_services(&self) -> IntegrationResult;
-    async fn call_service(&self, domain: &str, service: &str, data: Option<serde_json::Value>) -> IntegrationResult;
-    
+    async fn call_service(
+        &self,
+        domain: &str,
+        service: &str,
+        data: Option<serde_json::Value>,
+    ) -> IntegrationResult;
+
     // Automation
     async fn list_automations(&self) -> IntegrationResult;
     async fn trigger_automation(&self, automation_id: &str) -> IntegrationResult;
     async fn toggle_automation(&self, automation_id: &str, enabled: bool) -> IntegrationResult;
-    
+
     // Scenes
     async fn list_scenes(&self) -> IntegrationResult;
     async fn activate_scene(&self, scene_id: &str) -> IntegrationResult;
-    
+
     // Scripts
-    async fn run_script(&self, script_id: &str, data: Option<serde_json::Value>) -> IntegrationResult;
-    
+    async fn run_script(
+        &self,
+        script_id: &str,
+        data: Option<serde_json::Value>,
+    ) -> IntegrationResult;
+
     // Events
-    async fn fire_event(&self, event_type: &str, data: Option<serde_json::Value>) -> IntegrationResult;
-    
+    async fn fire_event(
+        &self,
+        event_type: &str,
+        data: Option<serde_json::Value>,
+    ) -> IntegrationResult;
+
     // Companion app
-    async fn notify(&self, message: &str, title: Option<&str>, data: Option<serde_json::Value>) -> IntegrationResult;
+    async fn notify(
+        &self,
+        message: &str,
+        title: Option<&str>,
+        data: Option<serde_json::Value>,
+    ) -> IntegrationResult;
 }
 
 // =============================================================================
@@ -179,7 +197,13 @@ pub trait HomeKitProvider: Send + Sync {
     async fn list_rooms(&self, home_id: &str) -> IntegrationResult;
     async fn list_accessories(&self, home_id: &str) -> IntegrationResult;
     async fn get_accessory(&self, accessory_id: &str) -> IntegrationResult;
-    async fn set_characteristic(&self, accessory_id: &str, service: &str, characteristic: &str, value: serde_json::Value) -> IntegrationResult;
+    async fn set_characteristic(
+        &self,
+        accessory_id: &str,
+        service: &str,
+        characteristic: &str,
+        value: serde_json::Value,
+    ) -> IntegrationResult;
     async fn list_scenes(&self, home_id: &str) -> IntegrationResult;
     async fn run_scene(&self, scene_id: &str) -> IntegrationResult;
 }
@@ -199,9 +223,9 @@ pub struct HueLight {
     pub id: String,
     pub name: String,
     pub is_on: bool,
-    pub brightness: u8, // 1-254
-    pub hue: Option<u16>, // 0-65535
-    pub saturation: Option<u8>, // 0-254
+    pub brightness: u8,          // 1-254
+    pub hue: Option<u16>,        // 0-65535
+    pub saturation: Option<u8>,  // 0-254
     pub color_temp: Option<u16>, // 153-500 (mirek)
     pub is_reachable: bool,
     pub light_type: String,
@@ -230,16 +254,27 @@ pub trait HueProvider: Send + Sync {
     // Lights
     async fn list_lights(&self) -> IntegrationResult;
     async fn get_light(&self, light_id: &str) -> IntegrationResult;
-    async fn set_light_state(&self, light_id: &str, on: Option<bool>, brightness: Option<u8>, color: Option<(u16, u8)>) -> IntegrationResult;
-    
+    async fn set_light_state(
+        &self,
+        light_id: &str,
+        on: Option<bool>,
+        brightness: Option<u8>,
+        color: Option<(u16, u8)>,
+    ) -> IntegrationResult;
+
     // Groups
     async fn list_groups(&self) -> IntegrationResult;
-    async fn set_group_state(&self, group_id: &str, on: Option<bool>, brightness: Option<u8>) -> IntegrationResult;
-    
+    async fn set_group_state(
+        &self,
+        group_id: &str,
+        on: Option<bool>,
+        brightness: Option<u8>,
+    ) -> IntegrationResult;
+
     // Scenes
     async fn list_scenes(&self) -> IntegrationResult;
     async fn activate_scene(&self, scene_id: &str) -> IntegrationResult;
-    
+
     // Effects
     async fn set_color_loop(&self, light_id: &str, enabled: bool) -> IntegrationResult;
     async fn alert(&self, light_id: &str) -> IntegrationResult;
@@ -289,7 +324,11 @@ pub trait ThermostatProvider: Send + Sync {
     async fn set_temperature(&self, thermostat_id: &str, temperature: f32) -> IntegrationResult;
     async fn set_mode(&self, thermostat_id: &str, mode: ThermostatMode) -> IntegrationResult;
     async fn set_fan_mode(&self, thermostat_id: &str, fan_mode: FanMode) -> IntegrationResult;
-    async fn set_schedule(&self, thermostat_id: &str, schedule: serde_json::Value) -> IntegrationResult;
+    async fn set_schedule(
+        &self,
+        thermostat_id: &str,
+        schedule: serde_json::Value,
+    ) -> IntegrationResult;
 }
 
 // =============================================================================

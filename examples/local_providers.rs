@@ -32,11 +32,7 @@ fn main() -> anyhow::Result<()> {
 
     println!("   Found {} providers:", providers.len());
     for provider in providers {
-        let status = if provider.is_available() {
-            "+"
-        } else {
-            "x"
-        };
+        let status = if provider.is_available() { "+" } else { "x" };
         let endpoint = provider
             .sessions_path()
             .map(|p| p.to_string_lossy().to_string())

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Application state for the API server
 
-use std::sync::Mutex;
 use std::path::PathBuf;
+use std::sync::Mutex;
 
 use crate::database::ChatDatabase;
 
@@ -16,7 +16,7 @@ pub struct AppState {
 
 impl AppState {
     pub fn new(db: ChatDatabase, db_path: PathBuf) -> Self {
-        Self { 
+        Self {
             db: Mutex::new(db),
             db_path,
         }

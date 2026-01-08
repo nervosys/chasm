@@ -116,10 +116,13 @@ fn read_workspaces_resource() -> ReadResourceResult {
                 contents: vec![ResourceContent {
                     uri: "csm://workspaces".to_string(),
                     mime_type: Some("application/json".to_string()),
-                    text: Some(serde_json::to_string_pretty(&json!({
-                        "workspaces": infos,
-                        "total": infos.len()
-                    })).unwrap_or_default()),
+                    text: Some(
+                        serde_json::to_string_pretty(&json!({
+                            "workspaces": infos,
+                            "total": infos.len()
+                        }))
+                        .unwrap_or_default(),
+                    ),
                     blob: None,
                 }],
             }
@@ -162,10 +165,13 @@ fn read_sessions_resource() -> ReadResourceResult {
                 contents: vec![ResourceContent {
                     uri: "csm://sessions".to_string(),
                     mime_type: Some("application/json".to_string()),
-                    text: Some(serde_json::to_string_pretty(&json!({
-                        "sessions": all_sessions,
-                        "total": all_sessions.len()
-                    })).unwrap_or_default()),
+                    text: Some(
+                        serde_json::to_string_pretty(&json!({
+                            "sessions": all_sessions,
+                            "total": all_sessions.len()
+                        }))
+                        .unwrap_or_default(),
+                    ),
                     blob: None,
                 }],
             }
@@ -234,8 +240,8 @@ fn read_workspace_resource(hash: &str) -> ReadResourceResult {
         Ok(workspaces) => {
             for ws in &workspaces {
                 if ws.hash.starts_with(hash) || ws.hash == hash {
-                    let sessions = get_chat_sessions_from_workspace(&ws.workspace_path)
-                        .unwrap_or_default();
+                    let sessions =
+                        get_chat_sessions_from_workspace(&ws.workspace_path).unwrap_or_default();
 
                     let session_infos: Vec<serde_json::Value> = sessions
                         .iter()
@@ -253,13 +259,16 @@ fn read_workspace_resource(hash: &str) -> ReadResourceResult {
                         contents: vec![ResourceContent {
                             uri: format!("csm://workspace/{}", ws.hash),
                             mime_type: Some("application/json".to_string()),
-                            text: Some(serde_json::to_string_pretty(&json!({
-                                "hash": ws.hash,
-                                "project_path": ws.project_path,
-                                "workspace_path": ws.workspace_path.display().to_string(),
-                                "session_count": ws.chat_session_count,
-                                "sessions": session_infos
-                            })).unwrap_or_default()),
+                            text: Some(
+                                serde_json::to_string_pretty(&json!({
+                                    "hash": ws.hash,
+                                    "project_path": ws.project_path,
+                                    "workspace_path": ws.workspace_path.display().to_string(),
+                                    "session_count": ws.chat_session_count,
+                                    "sessions": session_infos
+                                }))
+                                .unwrap_or_default(),
+                            ),
                             blob: None,
                         }],
                     };
@@ -302,10 +311,14 @@ fn read_session_resource(session_id: &str) -> ReadResourceResult {
                                 .requests
                                 .iter()
                                 .map(|r| {
-                                    let user_msg = r.message.as_ref()
+                                    let user_msg = r
+                                        .message
+                                        .as_ref()
                                         .map(|m| m.get_text())
                                         .unwrap_or_default();
-                                    let response_text = r.response.as_ref()
+                                    let response_text = r
+                                        .response
+                                        .as_ref()
                                         .and_then(|v| v.get("text"))
                                         .and_then(|t| t.as_str())
                                         .unwrap_or("");
@@ -321,17 +334,20 @@ fn read_session_resource(session_id: &str) -> ReadResourceResult {
                                 contents: vec![ResourceContent {
                                     uri: format!("csm://session/{}", sid),
                                     mime_type: Some("application/json".to_string()),
-                                    text: Some(serde_json::to_string_pretty(&json!({
-                                        "id": sid,
-                                        "title": s.session.title(),
-                                        "message_count": s.session.requests.len(),
-                                        "last_message_date": s.session.last_message_date,
-                                        "is_imported": s.session.is_imported,
-                                        "workspace_hash": ws.hash,
-                                        "project_path": ws.project_path,
-                                        "file_path": s.path.display().to_string(),
-                                        "messages": messages
-                                    })).unwrap_or_default()),
+                                    text: Some(
+                                        serde_json::to_string_pretty(&json!({
+                                            "id": sid,
+                                            "title": s.session.title(),
+                                            "message_count": s.session.requests.len(),
+                                            "last_message_date": s.session.last_message_date,
+                                            "is_imported": s.session.is_imported,
+                                            "workspace_hash": ws.hash,
+                                            "project_path": ws.project_path,
+                                            "file_path": s.path.display().to_string(),
+                                            "messages": messages
+                                        }))
+                                        .unwrap_or_default(),
+                                    ),
                                     blob: None,
                                 }],
                             };
@@ -372,11 +388,14 @@ fn read_db_workspaces_resource() -> ReadResourceResult {
             contents: vec![ResourceContent {
                 uri: "csm://db/workspaces".to_string(),
                 mime_type: Some("application/json".to_string()),
-                text: Some(json!({
-                    "error": "CSM database not found",
-                    "message": "Initialize csm-web database first",
-                    "db_path": db::get_csm_db_path().display().to_string()
-                }).to_string()),
+                text: Some(
+                    json!({
+                        "error": "CSM database not found",
+                        "message": "Initialize csm-web database first",
+                        "db_path": db::get_csm_db_path().display().to_string()
+                    })
+                    .to_string(),
+                ),
                 blob: None,
             }],
         };
@@ -402,11 +421,14 @@ fn read_db_workspaces_resource() -> ReadResourceResult {
                 contents: vec![ResourceContent {
                     uri: "csm://db/workspaces".to_string(),
                     mime_type: Some("application/json".to_string()),
-                    text: Some(serde_json::to_string_pretty(&json!({
-                        "workspaces": infos,
-                        "total": infos.len(),
-                        "source": "csm-web database"
-                    })).unwrap_or_default()),
+                    text: Some(
+                        serde_json::to_string_pretty(&json!({
+                            "workspaces": infos,
+                            "total": infos.len(),
+                            "source": "csm-web database"
+                        }))
+                        .unwrap_or_default(),
+                    ),
                     blob: None,
                 }],
             }
@@ -430,9 +452,12 @@ fn read_db_sessions_resource() -> ReadResourceResult {
             contents: vec![ResourceContent {
                 uri: "csm://db/sessions".to_string(),
                 mime_type: Some("application/json".to_string()),
-                text: Some(json!({
-                    "error": "CSM database not found"
-                }).to_string()),
+                text: Some(
+                    json!({
+                        "error": "CSM database not found"
+                    })
+                    .to_string(),
+                ),
                 blob: None,
             }],
         };
@@ -460,11 +485,14 @@ fn read_db_sessions_resource() -> ReadResourceResult {
                 contents: vec![ResourceContent {
                     uri: "csm://db/sessions".to_string(),
                     mime_type: Some("application/json".to_string()),
-                    text: Some(serde_json::to_string_pretty(&json!({
-                        "sessions": infos,
-                        "total": infos.len(),
-                        "source": "csm-web database"
-                    })).unwrap_or_default()),
+                    text: Some(
+                        serde_json::to_string_pretty(&json!({
+                            "sessions": infos,
+                            "total": infos.len(),
+                            "source": "csm-web database"
+                        }))
+                        .unwrap_or_default(),
+                    ),
                     blob: None,
                 }],
             }
@@ -488,10 +516,13 @@ fn read_db_stats_resource() -> ReadResourceResult {
             contents: vec![ResourceContent {
                 uri: "csm://db/stats".to_string(),
                 mime_type: Some("application/json".to_string()),
-                text: Some(json!({
-                    "error": "CSM database not found",
-                    "db_path": db::get_csm_db_path().display().to_string()
-                }).to_string()),
+                text: Some(
+                    json!({
+                        "error": "CSM database not found",
+                        "db_path": db::get_csm_db_path().display().to_string()
+                    })
+                    .to_string(),
+                ),
                 blob: None,
             }],
         };
@@ -510,12 +541,15 @@ fn read_db_stats_resource() -> ReadResourceResult {
                 contents: vec![ResourceContent {
                     uri: "csm://db/stats".to_string(),
                     mime_type: Some("application/json".to_string()),
-                    text: Some(serde_json::to_string_pretty(&json!({
-                        "total_sessions": total,
-                        "by_provider": provider_counts,
-                        "db_path": db::get_csm_db_path().display().to_string(),
-                        "source": "csm-web database"
-                    })).unwrap_or_default()),
+                    text: Some(
+                        serde_json::to_string_pretty(&json!({
+                            "total_sessions": total,
+                            "by_provider": provider_counts,
+                            "db_path": db::get_csm_db_path().display().to_string(),
+                            "source": "csm-web database"
+                        }))
+                        .unwrap_or_default(),
+                    ),
                     blob: None,
                 }],
             }
@@ -539,9 +573,12 @@ fn read_db_session_resource(session_id: &str) -> ReadResourceResult {
             contents: vec![ResourceContent {
                 uri: format!("csm://db/session/{}", session_id),
                 mime_type: Some("application/json".to_string()),
-                text: Some(json!({
-                    "error": "CSM database not found"
-                }).to_string()),
+                text: Some(
+                    json!({
+                        "error": "CSM database not found"
+                    })
+                    .to_string(),
+                ),
                 blob: None,
             }],
         };
@@ -568,20 +605,23 @@ fn read_db_session_resource(session_id: &str) -> ReadResourceResult {
                 contents: vec![ResourceContent {
                     uri: format!("csm://db/session/{}", session_id),
                     mime_type: Some("application/json".to_string()),
-                    text: Some(serde_json::to_string_pretty(&json!({
-                        "session": {
-                            "id": session.id,
-                            "workspace_id": session.workspace_id,
-                            "provider": session.provider,
-                            "title": session.title,
-                            "model": session.model,
-                            "message_count": session.message_count,
-                            "created_at": session.created_at,
-                            "updated_at": session.updated_at
-                        },
-                        "messages": message_infos,
-                        "source": "csm-web database"
-                    })).unwrap_or_default()),
+                    text: Some(
+                        serde_json::to_string_pretty(&json!({
+                            "session": {
+                                "id": session.id,
+                                "workspace_id": session.workspace_id,
+                                "provider": session.provider,
+                                "title": session.title,
+                                "model": session.model,
+                                "message_count": session.message_count,
+                                "created_at": session.created_at,
+                                "updated_at": session.updated_at
+                            },
+                            "messages": message_infos,
+                            "source": "csm-web database"
+                        }))
+                        .unwrap_or_default(),
+                    ),
                     blob: None,
                 }],
             }

@@ -208,13 +208,12 @@ pub fn find_workspaces(pattern: &str) -> Result<()> {
     // Show session paths for each matching workspace
     for ws in &matching {
         if ws.has_chat_sessions {
-            let project = ws
-                .project_path
-                .as_deref()
-                .unwrap_or("(none)");
+            let project = ws.project_path.as_deref().unwrap_or("(none)");
             println!("\nSessions for {}:", project);
-            
-            if let Ok(sessions) = crate::workspace::get_chat_sessions_from_workspace(&ws.workspace_path) {
+
+            if let Ok(sessions) =
+                crate::workspace::get_chat_sessions_from_workspace(&ws.workspace_path)
+            {
                 for session_with_path in sessions {
                     println!("  {}", session_with_path.path.display());
                 }

@@ -4,9 +4,9 @@
 
 #![allow(dead_code, unused_imports)]
 
-use super::types::*;
-use super::tools;
 use super::resources;
+use super::tools;
+use super::types::*;
 use serde_json::json;
 use std::io::{self, BufRead, Write};
 
@@ -30,7 +30,7 @@ impl McpServer {
 
         for line in stdin.lock().lines() {
             let line = line?;
-            
+
             if line.is_empty() {
                 continue;
             }
@@ -41,17 +41,17 @@ impl McpServer {
                 Ok(request) => {
                     let response = self.handle_request(request);
                     let response_str = serde_json::to_string(&response)?;
-                    eprintln!("[csm-mcp] Sending: {}", &response_str[..response_str.len().min(100)]);
+                    eprintln!(
+                        "[csm-mcp] Sending: {}",
+                        &response_str[..response_str.len().min(100)]
+                    );
                     writeln!(stdout, "{}", response_str)?;
                     stdout.flush()?;
                 }
                 Err(e) => {
                     eprintln!("[csm-mcp] Parse error: {}", e);
-                    let error_response = JsonRpcResponse::error(
-                        None,
-                        -32700,
-                        format!("Parse error: {}", e),
-                    );
+                    let error_response =
+                        JsonRpcResponse::error(None, -32700, format!("Parse error: {}", e));
                     writeln!(stdout, "{}", serde_json::to_string(&error_response)?)?;
                     stdout.flush()?;
                 }
@@ -112,17 +112,13 @@ impl McpServer {
 
     fn handle_tools_call(&self, request: JsonRpcRequest) -> JsonRpcResponse {
         let params: Result<CallToolParams, _> = serde_json::from_value(request.params.clone());
-        
+
         match params {
             Ok(params) => {
                 let result = tools::call_tool(&params.name, &params.arguments);
                 JsonRpcResponse::success(request.id, serde_json::to_value(result).unwrap())
             }
-            Err(e) => JsonRpcResponse::error(
-                request.id,
-                -32602,
-                format!("Invalid params: {}", e),
-            ),
+            Err(e) => JsonRpcResponse::error(request.id, -32602, format!("Invalid params: {}", e)),
         }
     }
 
@@ -133,17 +129,13 @@ impl McpServer {
 
     fn handle_resources_read(&self, request: JsonRpcRequest) -> JsonRpcResponse {
         let params: Result<ReadResourceParams, _> = serde_json::from_value(request.params.clone());
-        
+
         match params {
             Ok(params) => {
                 let result = resources::read_resource(&params.uri);
                 JsonRpcResponse::success(request.id, serde_json::to_value(result).unwrap())
             }
-            Err(e) => JsonRpcResponse::error(
-                request.id,
-                -32602,
-                format!("Invalid params: {}", e),
-            ),
+            Err(e) => JsonRpcResponse::error(request.id, -32602, format!("Invalid params: {}", e)),
         }
     }
 }

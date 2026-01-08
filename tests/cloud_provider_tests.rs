@@ -325,8 +325,8 @@ mod cloud_provider_trait_tests {
 // ============================================================================
 
 mod cloud_conversation_tests {
-    use chrono::Utc;
     use chasm::providers::cloud::common::{CloudConversation, CloudMessage};
+    use chrono::Utc;
 
     #[test]
     fn test_cloud_conversation_to_chat_session() {
@@ -410,8 +410,8 @@ mod cloud_conversation_tests {
 // ============================================================================
 
 mod fetch_options_tests {
-    use chrono::Utc;
     use chasm::providers::cloud::common::FetchOptions;
+    use chrono::Utc;
 
     #[test]
     fn test_fetch_options_default() {
@@ -852,8 +852,8 @@ mod extended_cloud_provider_tests {
 // ============================================================================
 
 mod cloud_conversation_edge_cases {
-    use chrono::Utc;
     use chasm::providers::cloud::common::{CloudConversation, CloudMessage};
+    use chrono::Utc;
 
     #[test]
     fn test_conversation_with_single_message() {
@@ -1115,8 +1115,8 @@ mod provider_type_methods_tests {
 // ============================================================================
 
 mod cloud_stress_tests {
-    use chrono::Utc;
     use chasm::providers::cloud::common::{CloudConversation, CloudMessage};
+    use chrono::Utc;
 
     #[test]
     fn test_many_conversations() {

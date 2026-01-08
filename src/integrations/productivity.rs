@@ -6,7 +6,7 @@
 
 #![allow(dead_code)]
 
-use super::{IntegrationResult, AuthMethod};
+use super::{AuthMethod, IntegrationResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -62,7 +62,13 @@ pub trait CalendarProvider: Send + Sync {
     async fn create_event(&self, calendar_id: &str, event: &CalendarEvent) -> IntegrationResult;
     async fn update_event(&self, event_id: &str, event: &CalendarEvent) -> IntegrationResult;
     async fn delete_event(&self, event_id: &str) -> IntegrationResult;
-    async fn find_free_time(&self, calendars: &[String], duration_minutes: u32, range_start: &str, range_end: &str) -> IntegrationResult;
+    async fn find_free_time(
+        &self,
+        calendars: &[String],
+        duration_minutes: u32,
+        range_start: &str,
+        range_end: &str,
+    ) -> IntegrationResult;
 }
 
 // =============================================================================
@@ -152,7 +158,12 @@ pub struct Note {
 pub trait NotesProvider: Send + Sync {
     async fn list_notes(&self, folder: Option<&str>) -> IntegrationResult;
     async fn get_note(&self, note_id: &str) -> IntegrationResult;
-    async fn create_note(&self, title: &str, content: &str, folder: Option<&str>) -> IntegrationResult;
+    async fn create_note(
+        &self,
+        title: &str,
+        content: &str,
+        folder: Option<&str>,
+    ) -> IntegrationResult;
     async fn update_note(&self, note_id: &str, content: &str) -> IntegrationResult;
     async fn delete_note(&self, note_id: &str) -> IntegrationResult;
     async fn search_notes(&self, query: &str) -> IntegrationResult;
@@ -201,7 +212,8 @@ pub enum TaskStatus {
 /// Tasks provider trait
 #[async_trait::async_trait]
 pub trait TasksProvider: Send + Sync {
-    async fn list_tasks(&self, project: Option<&str>, include_completed: bool) -> IntegrationResult;
+    async fn list_tasks(&self, project: Option<&str>, include_completed: bool)
+        -> IntegrationResult;
     async fn get_task(&self, task_id: &str) -> IntegrationResult;
     async fn create_task(&self, task: &Task) -> IntegrationResult;
     async fn update_task(&self, task_id: &str, task: &Task) -> IntegrationResult;

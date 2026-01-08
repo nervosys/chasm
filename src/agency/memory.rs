@@ -152,7 +152,10 @@ pub enum MemoryType {
 #[serde(rename_all = "snake_case")]
 pub enum MemorySource {
     /// From a conversation message
-    Conversation { session_id: String, message_id: String },
+    Conversation {
+        session_id: String,
+        message_id: String,
+    },
     /// From a document/file
     Document { path: String, chunk_index: u32 },
     /// Direct user input/instruction
@@ -260,7 +263,7 @@ impl SimilarityMetric {
     /// Calculate similarity between two vectors
     pub fn calculate(&self, a: &[f32], b: &[f32]) -> f32 {
         assert_eq!(a.len(), b.len(), "Vector dimensions must match");
-        
+
         match self {
             SimilarityMetric::Cosine => {
                 let dot: f32 = a.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
@@ -273,12 +276,15 @@ impl SimilarityMetric {
                 }
             }
             SimilarityMetric::Euclidean => {
-                let dist: f32 = a.iter().zip(b.iter()).map(|(x, y)| (x - y).powi(2)).sum::<f32>().sqrt();
+                let dist: f32 = a
+                    .iter()
+                    .zip(b.iter())
+                    .map(|(x, y)| (x - y).powi(2))
+                    .sum::<f32>()
+                    .sqrt();
                 1.0 / (1.0 + dist) // Convert distance to similarity
             }
-            SimilarityMetric::DotProduct => {
-                a.iter().zip(b.iter()).map(|(x, y)| x * y).sum()
-            }
+            SimilarityMetric::DotProduct => a.iter().zip(b.iter()).map(|(x, y)| x * y).sum(),
             SimilarityMetric::Manhattan => {
                 let dist: f32 = a.iter().zip(b.iter()).map(|(x, y)| (x - y).abs()).sum();
                 1.0 / (1.0 + dist)
@@ -316,12 +322,16 @@ impl VectorStore {
     }
 
     /// Create a vector store with SQLite persistence
-    pub fn with_persistence(config: VectorStoreConfig, db_path: impl AsRef<Path>) -> Result<Self, MemoryError> {
+    pub fn with_persistence(
+        config: VectorStoreConfig,
+        db_path: impl AsRef<Path>,
+    ) -> Result<Self, MemoryError> {
         let db = rusqlite::Connection::open(db_path.as_ref())
             .map_err(|e| MemoryError::Database(e.to_string()))?;
-        
+
         // Initialize schema
-        db.execute_batch(r#"
+        db.execute_batch(
+            r#"
             CREATE TABLE IF NOT EXISTS memory_entries (
                 id TEXT PRIMARY KEY,
                 content TEXT NOT NULL,
@@ -344,14 +354,16 @@ impl VectorStore {
             CREATE INDEX IF NOT EXISTS idx_session_id ON memory_entries(session_id);
             CREATE INDEX IF NOT EXISTS idx_created_at ON memory_entries(created_at);
             CREATE INDEX IF NOT EXISTS idx_importance ON memory_entries(importance DESC);
-        "#).map_err(|e| MemoryError::Database(e.to_string()))?;
+        "#,
+        )
+        .map_err(|e| MemoryError::Database(e.to_string()))?;
 
         let mut store = Self {
             config,
             entries: Vec::new(),
             db: Some(db),
         };
-        
+
         store.load_from_db()?;
         Ok(store)
     }
@@ -359,43 +371,59 @@ impl VectorStore {
     /// Load entries from database
     fn load_from_db(&mut self) -> Result<(), MemoryError> {
         if let Some(ref db) = self.db {
-            let mut stmt = db.prepare(
-                "SELECT id, content, embedding, memory_type, source, importance, 
+            let mut stmt = db
+                .prepare(
+                    "SELECT id, content, embedding, memory_type, source, importance, 
                         access_count, last_accessed, created_at, expires_at, 
                         agent_id, session_id, metadata, tags 
                  FROM memory_entries 
-                 ORDER BY importance DESC, created_at DESC"
-            ).map_err(|e| MemoryError::Database(e.to_string()))?;
+                 ORDER BY importance DESC, created_at DESC",
+                )
+                .map_err(|e| MemoryError::Database(e.to_string()))?;
 
-            let entries = stmt.query_map([], |row| {
-                let embedding_blob: Option<Vec<u8>> = row.get(2)?;
-                let embedding = embedding_blob.map(|blob| {
-                    blob.chunks(4)
-                        .map(|chunk| f32::from_le_bytes(chunk.try_into().unwrap_or([0; 4])))
-                        .collect()
-                });
+            let entries = stmt
+                .query_map([], |row| {
+                    let embedding_blob: Option<Vec<u8>> = row.get(2)?;
+                    let embedding = embedding_blob.map(|blob| {
+                        blob.chunks(4)
+                            .map(|chunk| f32::from_le_bytes(chunk.try_into().unwrap_or([0; 4])))
+                            .collect()
+                    });
 
-                Ok(MemoryEntry {
-                    id: row.get(0)?,
-                    content: row.get(1)?,
-                    embedding,
-                    memory_type: serde_json::from_str(&row.get::<_, String>(3)?).unwrap_or(MemoryType::LongTerm),
-                    source: serde_json::from_str(&row.get::<_, String>(4)?).unwrap_or(MemorySource::UserInput),
-                    importance: row.get(5)?,
-                    access_count: row.get(6)?,
-                    last_accessed: row.get::<_, String>(7)?.parse().unwrap_or_else(|_| Utc::now()),
-                    created_at: row.get::<_, String>(8)?.parse().unwrap_or_else(|_| Utc::now()),
-                    expires_at: row.get::<_, Option<String>>(9)?.and_then(|s| s.parse().ok()),
-                    agent_id: row.get(10)?,
-                    session_id: row.get(11)?,
-                    metadata: row.get::<_, Option<String>>(12)?
-                        .and_then(|s| serde_json::from_str(&s).ok())
-                        .unwrap_or_default(),
-                    tags: row.get::<_, Option<String>>(13)?
-                        .and_then(|s| serde_json::from_str(&s).ok())
-                        .unwrap_or_default(),
+                    Ok(MemoryEntry {
+                        id: row.get(0)?,
+                        content: row.get(1)?,
+                        embedding,
+                        memory_type: serde_json::from_str(&row.get::<_, String>(3)?)
+                            .unwrap_or(MemoryType::LongTerm),
+                        source: serde_json::from_str(&row.get::<_, String>(4)?)
+                            .unwrap_or(MemorySource::UserInput),
+                        importance: row.get(5)?,
+                        access_count: row.get(6)?,
+                        last_accessed: row
+                            .get::<_, String>(7)?
+                            .parse()
+                            .unwrap_or_else(|_| Utc::now()),
+                        created_at: row
+                            .get::<_, String>(8)?
+                            .parse()
+                            .unwrap_or_else(|_| Utc::now()),
+                        expires_at: row
+                            .get::<_, Option<String>>(9)?
+                            .and_then(|s| s.parse().ok()),
+                        agent_id: row.get(10)?,
+                        session_id: row.get(11)?,
+                        metadata: row
+                            .get::<_, Option<String>>(12)?
+                            .and_then(|s| serde_json::from_str(&s).ok())
+                            .unwrap_or_default(),
+                        tags: row
+                            .get::<_, Option<String>>(13)?
+                            .and_then(|s| serde_json::from_str(&s).ok())
+                            .unwrap_or_default(),
+                    })
                 })
-            }).map_err(|e| MemoryError::Database(e.to_string()))?;
+                .map_err(|e| MemoryError::Database(e.to_string()))?;
 
             self.entries = entries.filter_map(|e| e.ok()).collect();
         }
@@ -405,13 +433,14 @@ impl VectorStore {
     /// Add a memory entry
     pub fn add(&mut self, entry: MemoryEntry) -> Result<MemoryId, MemoryError> {
         let id = entry.id.clone();
-        
+
         // Persist to database if available
         if let Some(ref db) = self.db {
-            let embedding_blob: Option<Vec<u8>> = entry.embedding.as_ref().map(|emb| {
-                emb.iter().flat_map(|f| f.to_le_bytes()).collect()
-            });
-            
+            let embedding_blob: Option<Vec<u8>> = entry
+                .embedding
+                .as_ref()
+                .map(|emb| emb.iter().flat_map(|f| f.to_le_bytes()).collect());
+
             db.execute(
                 "INSERT OR REPLACE INTO memory_entries 
                  (id, content, embedding, memory_type, source, importance, 
@@ -434,45 +463,48 @@ impl VectorStore {
                     serde_json::to_string(&entry.metadata).ok(),
                     serde_json::to_string(&entry.tags).ok(),
                 ],
-            ).map_err(|e| MemoryError::Database(e.to_string()))?;
+            )
+            .map_err(|e| MemoryError::Database(e.to_string()))?;
         }
-        
+
         self.entries.push(entry);
-        
+
         // Prune if needed
         if self.entries.len() > self.config.max_entries {
             self.prune()?;
         }
-        
+
         Ok(id)
     }
 
     /// Search for similar entries
     pub fn search(&mut self, query_embedding: &Embedding, limit: usize) -> Vec<SearchResult> {
-        let mut results: Vec<(usize, f32)> = self.entries
+        let mut results: Vec<(usize, f32)> = self
+            .entries
             .iter()
             .enumerate()
             .filter(|(_, e)| !e.is_expired() && e.embedding.is_some())
             .map(|(i, e)| {
-                let score = self.config.similarity_metric.calculate(
-                    query_embedding,
-                    e.embedding.as_ref().unwrap(),
-                );
+                let score = self
+                    .config
+                    .similarity_metric
+                    .calculate(query_embedding, e.embedding.as_ref().unwrap());
                 (i, score)
             })
             .collect();
-        
+
         // Sort by score descending
         results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         // Take top results and update access counts
-        results.into_iter()
+        results
+            .into_iter()
             .take(limit)
             .enumerate()
             .map(|(rank, (idx, score))| {
                 self.entries[idx].access_count += 1;
                 self.entries[idx].last_accessed = Utc::now();
-                
+
                 SearchResult {
                     entry: self.entries[idx].clone(),
                     score,
@@ -509,12 +541,12 @@ impl VectorStore {
     pub fn delete(&mut self, id: &str) -> Result<bool, MemoryError> {
         if let Some(pos) = self.entries.iter().position(|e| e.id == id) {
             self.entries.remove(pos);
-            
+
             if let Some(ref db) = self.db {
                 db.execute("DELETE FROM memory_entries WHERE id = ?1", [id])
                     .map_err(|e| MemoryError::Database(e.to_string()))?;
             }
-            
+
             Ok(true)
         } else {
             Ok(false)
@@ -525,16 +557,17 @@ impl VectorStore {
     fn prune(&mut self) -> Result<(), MemoryError> {
         // Remove expired entries
         self.entries.retain(|e| !e.is_expired());
-        
+
         // If still over limit, remove lowest importance entries
         if self.entries.len() > self.config.max_entries {
             self.entries.sort_by(|a, b| {
-                b.importance.partial_cmp(&a.importance)
+                b.importance
+                    .partial_cmp(&a.importance)
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
             self.entries.truncate(self.config.max_entries);
         }
-        
+
         Ok(())
     }
 
@@ -683,7 +716,10 @@ impl KnowledgeBase {
     }
 
     /// Create with persistence
-    pub fn with_persistence(vector_config: VectorStoreConfig, db_path: impl AsRef<Path>) -> Result<Self, MemoryError> {
+    pub fn with_persistence(
+        vector_config: VectorStoreConfig,
+        db_path: impl AsRef<Path>,
+    ) -> Result<Self, MemoryError> {
         Ok(Self {
             vector_store: VectorStore::with_persistence(vector_config, db_path)?,
             documents: HashMap::new(),
@@ -695,9 +731,9 @@ impl KnowledgeBase {
     pub fn add_document(&mut self, mut document: Document) -> Result<String, MemoryError> {
         // Chunk the document
         document.chunks = self.chunk_document(&document.content);
-        
+
         let doc_id = document.id.clone();
-        
+
         // Add chunks to vector store
         for chunk in &document.chunks {
             if let Some(ref embedding) = chunk.embedding {
@@ -711,11 +747,11 @@ impl KnowledgeBase {
                 )
                 .with_embedding(embedding.clone())
                 .with_tag(format!("doc:{}", doc_id));
-                
+
                 self.vector_store.add(entry)?;
             }
         }
-        
+
         self.documents.insert(doc_id.clone(), document);
         Ok(doc_id)
     }
@@ -747,7 +783,9 @@ impl KnowledgeBase {
             let para_tokens = estimate_tokens(para);
             let current_tokens = estimate_tokens(&current_chunk);
 
-            if current_tokens + para_tokens > self.chunking_config.chunk_size && !current_chunk.is_empty() {
+            if current_tokens + para_tokens > self.chunking_config.chunk_size
+                && !current_chunk.is_empty()
+            {
                 // Save current chunk
                 let end_pos = start_pos + current_chunk.len();
                 chunks.push(DocumentChunk {
@@ -786,7 +824,8 @@ impl KnowledgeBase {
     }
 
     fn paragraph_chunk(&self, content: &str) -> Vec<DocumentChunk> {
-        content.split("\n\n")
+        content
+            .split("\n\n")
             .filter(|p| !p.trim().is_empty())
             .enumerate()
             .scan(0usize, |pos, (i, para)| {
@@ -810,7 +849,7 @@ impl KnowledgeBase {
             .split(|c| c == '.' || c == '!' || c == '?')
             .filter(|s| !s.trim().is_empty())
             .collect();
-        
+
         let mut chunks = Vec::new();
         let mut current = String::new();
         let mut start = 0;
@@ -818,7 +857,9 @@ impl KnowledgeBase {
 
         for sentence in sentences {
             let sentence = sentence.trim();
-            if estimate_tokens(&current) + estimate_tokens(sentence) > self.chunking_config.chunk_size {
+            if estimate_tokens(&current) + estimate_tokens(sentence)
+                > self.chunking_config.chunk_size
+            {
                 if !current.is_empty() {
                     chunks.push(DocumentChunk {
                         index: idx,
@@ -856,7 +897,8 @@ impl KnowledgeBase {
 
     fn fixed_chunk(&self, content: &str) -> Vec<DocumentChunk> {
         let chars_per_chunk = self.chunking_config.chunk_size * 4; // Rough estimate
-        content.chars()
+        content
+            .chars()
             .collect::<Vec<_>>()
             .chunks(chars_per_chunk)
             .enumerate()
@@ -1009,15 +1051,14 @@ impl ContextWindow {
     /// Build the final context, respecting token limits
     pub fn build(&mut self) -> String {
         let available = self.max_tokens - self.reserved_for_response;
-        
+
         // Sort by priority (required first, then by priority)
-        self.segments.sort_by(|a, b| {
-            match (a.required, b.required) {
+        self.segments
+            .sort_by(|a, b| match (a.required, b.required) {
                 (true, false) => std::cmp::Ordering::Less,
                 (false, true) => std::cmp::Ordering::Greater,
                 _ => b.priority.cmp(&a.priority),
-            }
-        });
+            });
 
         let mut total_tokens = 0;
         let mut result = Vec::new();
@@ -1100,14 +1141,17 @@ impl<T: Clone> AgentCache<T> {
     pub fn set(&mut self, key: impl Into<String>, value: T, ttl: Option<chrono::Duration>) {
         let key = key.into();
         let now = Utc::now();
-        
-        self.entries.insert(key.clone(), CacheEntry {
-            key,
-            value,
-            created_at: now,
-            expires_at: ttl.map(|d| now + d),
-            access_count: 0,
-        });
+
+        self.entries.insert(
+            key.clone(),
+            CacheEntry {
+                key,
+                value,
+                created_at: now,
+                expires_at: ttl.map(|d| now + d),
+                access_count: 0,
+            },
+        );
 
         // Evict if over size
         if self.entries.len() > self.max_size {
@@ -1133,17 +1177,20 @@ impl<T: Clone> AgentCache<T> {
         // If still over, remove least accessed
         if self.entries.len() > self.max_size {
             // Collect keys to remove (sorted by access count)
-            let mut entries: Vec<_> = self.entries.iter()
+            let mut entries: Vec<_> = self
+                .entries
+                .iter()
                 .map(|(k, v)| (k.clone(), v.access_count))
                 .collect();
             entries.sort_by_key(|(_, count)| *count);
-            
+
             let to_remove = self.entries.len() - self.max_size;
-            let keys_to_remove: Vec<String> = entries.into_iter()
+            let keys_to_remove: Vec<String> = entries
+                .into_iter()
                 .take(to_remove)
                 .map(|(k, _)| k)
                 .collect();
-            
+
             for key in keys_to_remove {
                 self.entries.remove(&key);
             }
@@ -1221,15 +1268,25 @@ impl MemoryManager {
     }
 
     /// Store a memory
-    pub fn remember(&mut self, content: impl Into<String>, memory_type: MemoryType, source: MemorySource) -> Result<MemoryId, MemoryError> {
+    pub fn remember(
+        &mut self,
+        content: impl Into<String>,
+        memory_type: MemoryType,
+        source: MemorySource,
+    ) -> Result<MemoryId, MemoryError> {
         let entry = MemoryEntry::new(content, memory_type, source);
         self.vector_store.add(entry)
     }
 
     /// Store a memory with embedding
-    pub fn remember_with_embedding(&mut self, content: impl Into<String>, embedding: Embedding, memory_type: MemoryType, source: MemorySource) -> Result<MemoryId, MemoryError> {
-        let entry = MemoryEntry::new(content, memory_type, source)
-            .with_embedding(embedding);
+    pub fn remember_with_embedding(
+        &mut self,
+        content: impl Into<String>,
+        embedding: Embedding,
+        memory_type: MemoryType,
+        source: MemorySource,
+    ) -> Result<MemoryId, MemoryError> {
+        let entry = MemoryEntry::new(content, memory_type, source).with_embedding(embedding);
         self.vector_store.add(entry)
     }
 
@@ -1254,7 +1311,12 @@ impl MemoryManager {
     }
 
     /// Build context for a prompt
-    pub fn build_context(&mut self, query_embedding: &Embedding, system_prompt: &str, conversation: &[String]) -> String {
+    pub fn build_context(
+        &mut self,
+        query_embedding: &Embedding,
+        system_prompt: &str,
+        conversation: &[String],
+    ) -> String {
         let mut context = ContextWindow::new(self.config.context_window_tokens);
 
         // System prompt (required)
@@ -1274,7 +1336,7 @@ impl MemoryManager {
                 .map(|r| format!("- {}", r.entry.content))
                 .collect::<Vec<_>>()
                 .join("\n");
-            
+
             context.add_segment(ContextSegment {
                 segment_type: ContextSegmentType::RetrievedContext,
                 content: format!("Relevant context:\n{}", retrieved_text),
@@ -1298,7 +1360,12 @@ impl MemoryManager {
     }
 
     /// Cache a computation result
-    pub fn cache_result(&mut self, key: impl Into<String>, value: String, ttl: Option<chrono::Duration>) {
+    pub fn cache_result(
+        &mut self,
+        key: impl Into<String>,
+        value: String,
+        ttl: Option<chrono::Duration>,
+    ) {
         self.cache.set(key, value, ttl);
     }
 
@@ -1393,10 +1460,10 @@ fn truncate_to_tokens(text: &str, max_tokens: usize) -> String {
 pub trait EmbeddingProvider: Send + Sync {
     /// Generate embedding for text
     async fn embed(&self, text: &str) -> Result<Embedding, MemoryError>;
-    
+
     /// Generate embeddings for multiple texts
     async fn embed_batch(&self, texts: &[String]) -> Result<Vec<Embedding>, MemoryError>;
-    
+
     /// Get the embedding dimension
     fn dimension(&self) -> usize;
 }
@@ -1480,10 +1547,10 @@ mod tests {
     fn test_vector_store() {
         let config = VectorStoreConfig::default();
         let mut store = VectorStore::new(config);
-        
+
         let entry = MemoryEntry::new("Test", MemoryType::ShortTerm, MemorySource::UserInput)
             .with_embedding(vec![1.0, 0.0, 0.0]);
-        
+
         let id = store.add(entry).unwrap();
         assert!(!id.is_empty());
         assert!(store.get(&id).is_some());
@@ -1492,7 +1559,7 @@ mod tests {
     #[test]
     fn test_context_window() {
         let mut ctx = ContextWindow::new(1000);
-        
+
         ctx.add_segment(ContextSegment {
             segment_type: ContextSegmentType::SystemPrompt,
             content: "You are helpful".to_string(),
@@ -1508,7 +1575,7 @@ mod tests {
     #[test]
     fn test_cache() {
         let mut cache: AgentCache<String> = AgentCache::new(10);
-        
+
         cache.set("key1", "value1".to_string(), None);
         assert_eq!(cache.get("key1"), Some("value1".to_string()));
         assert_eq!(cache.get("key2"), None);

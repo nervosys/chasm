@@ -37,22 +37,22 @@ pub struct ShellEnvironment {
 pub trait ShellProvider: Send + Sync {
     /// Run a command and wait for result
     async fn run_command(&self, command: &str, cwd: Option<&str>) -> IntegrationResult;
-    
+
     /// Run a command with custom environment
     async fn run_with_env(&self, command: &str, env: HashMap<String, String>) -> IntegrationResult;
-    
+
     /// Run a command in the background
     async fn run_background(&self, command: &str) -> IntegrationResult;
-    
+
     /// Kill a background process
     async fn kill_process(&self, pid: u32) -> IntegrationResult;
-    
+
     /// Get current shell environment
     async fn get_environment(&self) -> IntegrationResult;
-    
+
     /// Set environment variable
     async fn set_env_var(&self, name: &str, value: &str) -> IntegrationResult;
-    
+
     /// Source a shell script
     async fn source_script(&self, path: &str) -> IntegrationResult;
 }
@@ -68,10 +68,7 @@ pub enum ClipboardContent {
     Html(String),
     Image(Vec<u8>),
     Files(Vec<PathBuf>),
-    RichText {
-        text: String,
-        rtf: String,
-    },
+    RichText { text: String, rtf: String },
 }
 
 /// Clipboard history entry
@@ -87,19 +84,19 @@ pub struct ClipboardEntry {
 pub trait ClipboardProvider: Send + Sync {
     /// Get current clipboard content
     async fn get(&self) -> IntegrationResult;
-    
+
     /// Set clipboard content
     async fn set_text(&self, text: &str) -> IntegrationResult;
-    
+
     /// Set clipboard HTML
     async fn set_html(&self, html: &str) -> IntegrationResult;
-    
+
     /// Set clipboard image
     async fn set_image(&self, image_data: Vec<u8>) -> IntegrationResult;
-    
+
     /// Get clipboard history (requires clipboard manager)
     async fn get_history(&self, limit: u32) -> IntegrationResult;
-    
+
     /// Clear clipboard
     async fn clear(&self) -> IntegrationResult;
 }
@@ -154,23 +151,23 @@ pub trait FilesystemProvider: Send + Sync {
     async fn read_json(&self, path: &str) -> IntegrationResult;
     async fn list_dir(&self, path: &str) -> IntegrationResult;
     async fn get_file_info(&self, path: &str) -> IntegrationResult;
-    
+
     // Writing
     async fn write_file(&self, path: &str, content: &str) -> IntegrationResult;
     async fn write_file_bytes(&self, path: &str, content: Vec<u8>) -> IntegrationResult;
     async fn append_file(&self, path: &str, content: &str) -> IntegrationResult;
-    
+
     // Operations
     async fn create_dir(&self, path: &str, recursive: bool) -> IntegrationResult;
     async fn copy(&self, src: &str, dst: &str) -> IntegrationResult;
     async fn move_path(&self, src: &str, dst: &str) -> IntegrationResult;
     async fn delete(&self, path: &str, recursive: bool) -> IntegrationResult;
     async fn exists(&self, path: &str) -> IntegrationResult;
-    
+
     // Search
     async fn search(&self, base_path: &str, options: SearchOptions) -> IntegrationResult;
     async fn glob(&self, pattern: &str) -> IntegrationResult;
-    
+
     // Watch
     async fn watch(&self, path: &str, events: Vec<WatchEvent>) -> IntegrationResult;
     async fn unwatch(&self, watch_id: &str) -> IntegrationResult;
@@ -218,16 +215,16 @@ pub struct NotificationOptions {
 pub trait SystemNotificationProvider: Send + Sync {
     /// Send a notification
     async fn notify(&self, options: NotificationOptions) -> IntegrationResult;
-    
+
     /// Schedule a notification
     async fn schedule(&self, options: NotificationOptions, at: &str) -> IntegrationResult;
-    
+
     /// Cancel a scheduled notification
     async fn cancel(&self, notification_id: &str) -> IntegrationResult;
-    
+
     /// List pending notifications
     async fn list_pending(&self) -> IntegrationResult;
-    
+
     /// Request notification permission
     async fn request_permission(&self) -> IntegrationResult;
 }
@@ -340,7 +337,7 @@ pub trait AppControlProvider: Send + Sync {
     async fn launch_app(&self, app_id: &str) -> IntegrationResult;
     async fn quit_app(&self, app_id: &str) -> IntegrationResult;
     async fn focus_app(&self, app_id: &str) -> IntegrationResult;
-    
+
     // Windows
     async fn list_windows(&self) -> IntegrationResult;
     async fn focus_window(&self, window_id: u64) -> IntegrationResult;
@@ -371,22 +368,22 @@ pub enum KeyModifier {
 pub trait InputProvider: Send + Sync {
     /// Type text
     async fn type_text(&self, text: &str, delay_ms: Option<u32>) -> IntegrationResult;
-    
+
     /// Press a key
     async fn press_key(&self, key: &str, modifiers: Vec<KeyModifier>) -> IntegrationResult;
-    
+
     /// Press a key combination
     async fn key_combo(&self, keys: Vec<&str>) -> IntegrationResult;
-    
+
     /// Move mouse
     async fn move_mouse(&self, x: i32, y: i32) -> IntegrationResult;
-    
+
     /// Click mouse
     async fn click(&self, button: &str) -> IntegrationResult;
-    
+
     /// Double click
     async fn double_click(&self) -> IntegrationResult;
-    
+
     /// Scroll
     async fn scroll(&self, dx: i32, dy: i32) -> IntegrationResult;
 }
@@ -448,7 +445,13 @@ pub trait DisplayProvider: Send + Sync {
     async fn get_brightness(&self, display_id: &str) -> IntegrationResult;
     async fn set_brightness(&self, display_id: &str, brightness: u8) -> IntegrationResult;
     async fn take_screenshot(&self, display_id: Option<&str>) -> IntegrationResult;
-    async fn take_screenshot_region(&self, x: i32, y: i32, width: u32, height: u32) -> IntegrationResult;
+    async fn take_screenshot_region(
+        &self,
+        x: i32,
+        y: i32,
+        width: u32,
+        height: u32,
+    ) -> IntegrationResult;
 }
 
 // =============================================================================
@@ -498,7 +501,12 @@ pub struct ScheduledTask {
 pub trait SchedulerProvider: Send + Sync {
     async fn list_tasks(&self) -> IntegrationResult;
     async fn create_task(&self, name: &str, command: &str, schedule: &str) -> IntegrationResult;
-    async fn update_task(&self, task_id: &str, command: Option<&str>, schedule: Option<&str>) -> IntegrationResult;
+    async fn update_task(
+        &self,
+        task_id: &str,
+        command: Option<&str>,
+        schedule: Option<&str>,
+    ) -> IntegrationResult;
     async fn delete_task(&self, task_id: &str) -> IntegrationResult;
     async fn enable_task(&self, task_id: &str) -> IntegrationResult;
     async fn disable_task(&self, task_id: &str) -> IntegrationResult;

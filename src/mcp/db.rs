@@ -42,7 +42,11 @@ pub fn get_db_workspace(id: &str) -> Result<Option<Workspace>> {
 }
 
 /// List sessions from the CSM database
-pub fn list_db_sessions(workspace_id: Option<&str>, provider: Option<&str>, limit: usize) -> Result<Vec<Session>> {
+pub fn list_db_sessions(
+    workspace_id: Option<&str>,
+    provider: Option<&str>,
+    limit: usize,
+) -> Result<Vec<Session>> {
     let db = open_csm_db()?;
     db.list_sessions(workspace_id, provider, limit)
 }
@@ -68,17 +72,17 @@ pub fn count_sessions_by_provider() -> Result<Vec<(String, i64)>> {
 /// Search sessions by title or content
 pub fn search_db_sessions(query: &str, limit: usize) -> Result<Vec<Session>> {
     let db = open_csm_db()?;
-    
+
     // Get all sessions and filter by title (simple search)
     // For full-text search, we'd use the harvest database
     let sessions = db.list_sessions(None, None, 1000)?;
-    
+
     let query_lower = query.to_lowercase();
     let filtered: Vec<Session> = sessions
         .into_iter()
         .filter(|s| s.title.to_lowercase().contains(&query_lower))
         .take(limit)
         .collect();
-    
+
     Ok(filtered)
 }

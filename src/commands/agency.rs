@@ -146,7 +146,11 @@ pub fn show_agent_info(name: &str) -> Result<()> {
             println!("  {} {}", "Tools:".dimmed(), "file_read, code_search, lint");
         }
         _ => {
-            println!("  {} Agent '{}' not found in defaults", "[!]".yellow(), name);
+            println!(
+                "  {} Agent '{}' not found in defaults",
+                "[!]".yellow(),
+                name
+            );
             println!();
             println!("  Use 'csm Agency create {}' to create a new agent", name);
         }

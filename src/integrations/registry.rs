@@ -20,13 +20,13 @@ pub enum IntegrationCategory {
     Notes,
     Tasks,
     Documents,
-    
+
     // Communication
     Chat,
     VideoConference,
     Social,
     Messaging,
-    
+
     // Development
     Git,
     Ide,
@@ -34,51 +34,51 @@ pub enum IntegrationCategory {
     Ci,
     Containers,
     Cloud,
-    
+
     // Browser & Web
     Browser,
     Automation,
     Scraping,
-    
+
     // Smart Home & IoT
     SmartHome,
     Iot,
     Voice,
-    
+
     // Media & Entertainment
     Music,
     Video,
     Podcasts,
     Reading,
-    
+
     // Finance
     Banking,
     Crypto,
     Trading,
     Payments,
-    
+
     // Health & Fitness
     Health,
     Fitness,
     Sleep,
     Nutrition,
-    
+
     // Travel & Transport
     Maps,
     RideShare,
     Travel,
-    
+
     // Shopping & Commerce
     Shopping,
     Grocery,
     Food,
-    
+
     // Utilities
     Weather,
     Storage,
     Backup,
     Security,
-    
+
     // System
     System,
     Clipboard,
@@ -186,8 +186,16 @@ impl IntegrationRegistry {
             status: IntegrationStatus::Available,
             capabilities: vec![
                 capability("list_events", "List Events", "Get upcoming calendar events"),
-                capability("create_event", "Create Event", "Create a new calendar event"),
-                capability("schedule_meeting", "Schedule Meeting", "Schedule a Teams meeting"),
+                capability(
+                    "create_event",
+                    "Create Event",
+                    "Create a new calendar event",
+                ),
+                capability(
+                    "schedule_meeting",
+                    "Schedule Meeting",
+                    "Schedule a Teams meeting",
+                ),
             ],
             auth_method: None,
             is_native: false,
@@ -206,7 +214,11 @@ impl IntegrationRegistry {
             status: IntegrationStatus::Available,
             capabilities: vec![
                 capability("list_events", "List Events", "Get upcoming calendar events"),
-                capability("create_event", "Create Event", "Create a new calendar event"),
+                capability(
+                    "create_event",
+                    "Create Event",
+                    "Create a new calendar event",
+                ),
             ],
             auth_method: None,
             is_native: true,
@@ -274,7 +286,11 @@ impl IntegrationRegistry {
                 capability("create_page", "Create Page", "Create a new Notion page"),
                 capability("update_page", "Update Page", "Update page content"),
                 capability("search", "Search", "Search Notion workspace"),
-                capability("create_database", "Create Database", "Create a new database"),
+                capability(
+                    "create_database",
+                    "Create Database",
+                    "Create a new database",
+                ),
                 capability("query_database", "Query Database", "Query database entries"),
             ],
             auth_method: None,
@@ -377,7 +393,11 @@ impl IntegrationRegistry {
             website: None,
             status: IntegrationStatus::Available,
             capabilities: vec![
-                capability("create_reminder", "Create Reminder", "Create a new reminder"),
+                capability(
+                    "create_reminder",
+                    "Create Reminder",
+                    "Create a new reminder",
+                ),
                 capability("list_reminders", "List Reminders", "Get all reminders"),
             ],
             auth_method: None,
@@ -419,7 +439,11 @@ impl IntegrationRegistry {
             website: Some("https://slack.com".to_string()),
             status: IntegrationStatus::Available,
             capabilities: vec![
-                capability("send_message", "Send Message", "Send a message to a channel"),
+                capability(
+                    "send_message",
+                    "Send Message",
+                    "Send a message to a channel",
+                ),
                 capability("list_channels", "List Channels", "Get all channels"),
                 capability("set_status", "Set Status", "Update your status"),
                 capability("search", "Search", "Search messages"),
@@ -441,7 +465,11 @@ impl IntegrationRegistry {
             website: Some("https://discord.com".to_string()),
             status: IntegrationStatus::Available,
             capabilities: vec![
-                capability("send_message", "Send Message", "Send a message to a channel"),
+                capability(
+                    "send_message",
+                    "Send Message",
+                    "Send a message to a channel",
+                ),
                 capability("list_servers", "List Servers", "Get all servers"),
             ],
             auth_method: None,
@@ -460,8 +488,16 @@ impl IntegrationRegistry {
             website: Some("https://teams.microsoft.com".to_string()),
             status: IntegrationStatus::Available,
             capabilities: vec![
-                capability("send_message", "Send Message", "Send a message to a channel"),
-                capability("schedule_meeting", "Schedule Meeting", "Schedule a Teams meeting"),
+                capability(
+                    "send_message",
+                    "Send Message",
+                    "Send a message to a channel",
+                ),
+                capability(
+                    "schedule_meeting",
+                    "Schedule Meeting",
+                    "Schedule a Teams meeting",
+                ),
             ],
             auth_method: None,
             is_native: false,
@@ -500,9 +536,7 @@ impl IntegrationRegistry {
             color: "#25d366".to_string(),
             website: Some("https://whatsapp.com".to_string()),
             status: IntegrationStatus::Available,
-            capabilities: vec![
-                capability("send_message", "Send Message", "Send a message"),
-            ],
+            capabilities: vec![capability("send_message", "Send Message", "Send a message")],
             auth_method: None,
             is_native: false,
             platforms: vec!["all".to_string()],
@@ -518,9 +552,11 @@ impl IntegrationRegistry {
             color: "#34c759".to_string(),
             website: None,
             status: IntegrationStatus::Available,
-            capabilities: vec![
-                capability("send_message", "Send Message", "Send an iMessage"),
-            ],
+            capabilities: vec![capability(
+                "send_message",
+                "Send Message",
+                "Send an iMessage",
+            )],
             auth_method: None,
             is_native: true,
             platforms: vec!["macos".to_string(), "ios".to_string()],
@@ -673,8 +709,16 @@ impl IntegrationRegistry {
             website: None,
             status: IntegrationStatus::Available,
             capabilities: vec![
-                capability("list_accessories", "List Accessories", "Get all accessories"),
-                capability("control_accessory", "Control Accessory", "Control an accessory"),
+                capability(
+                    "list_accessories",
+                    "List Accessories",
+                    "Get all accessories",
+                ),
+                capability(
+                    "control_accessory",
+                    "Control Accessory",
+                    "Control an accessory",
+                ),
                 capability("run_scene", "Run Scene", "Activate a scene"),
             ],
             auth_method: None,
@@ -799,9 +843,11 @@ impl IntegrationRegistry {
             color: "#f97316".to_string(),
             website: None,
             status: IntegrationStatus::Connected,
-            capabilities: vec![
-                capability("send", "Send Notification", "Send a system notification"),
-            ],
+            capabilities: vec![capability(
+                "send",
+                "Send Notification",
+                "Send a system notification",
+            )],
             auth_method: None,
             is_native: true,
             platforms: vec!["all".to_string()],
@@ -822,7 +868,11 @@ impl IntegrationRegistry {
             status: IntegrationStatus::Available,
             capabilities: vec![
                 capability("get_accounts", "Get Accounts", "List connected accounts"),
-                capability("get_transactions", "Get Transactions", "Get recent transactions"),
+                capability(
+                    "get_transactions",
+                    "Get Transactions",
+                    "Get recent transactions",
+                ),
                 capability("get_balance", "Get Balance", "Get account balance"),
             ],
             auth_method: None,
@@ -844,7 +894,11 @@ impl IntegrationRegistry {
             website: Some("https://maps.google.com".to_string()),
             status: IntegrationStatus::Available,
             capabilities: vec![
-                capability("directions", "Get Directions", "Get directions between locations"),
+                capability(
+                    "directions",
+                    "Get Directions",
+                    "Get directions between locations",
+                ),
                 capability("search_places", "Search Places", "Search for places"),
                 capability("get_eta", "Get ETA", "Get estimated travel time"),
             ],
@@ -878,7 +932,8 @@ impl IntegrationRegistry {
     }
 
     pub fn register(&mut self, integration: Integration) {
-        self.integrations.insert(integration.id.clone(), integration);
+        self.integrations
+            .insert(integration.id.clone(), integration);
     }
 
     pub fn get(&self, id: &str) -> Option<&Integration> {

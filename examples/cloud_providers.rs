@@ -10,7 +10,6 @@
 //!
 //! Run with: cargo run --example cloud_providers
 
-use chrono::{TimeZone, Utc};
 use chasm::providers::cloud::anthropic::parse_claude_export;
 use chasm::providers::cloud::chatgpt::parse_chatgpt_export;
 #[allow(unused_imports)]
@@ -23,6 +22,7 @@ use chasm::providers::cloud::perplexity::parse_perplexity_export;
 use chasm::providers::{
     CloudConversation, CloudMessage, FetchOptions, GenericMessage, GenericSession, ProviderType,
 };
+use chrono::{TimeZone, Utc};
 
 fn main() -> anyhow::Result<()> {
     println!("=== CSM Cloud Provider Examples ===\n");

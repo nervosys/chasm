@@ -344,11 +344,17 @@ fn infer_provider(model: &str) -> ModelProvider {
     let model_lower = model.to_lowercase();
     if model_lower.contains("gemini") || model_lower.contains("palm") {
         ModelProvider::Google
-    } else if model_lower.contains("gpt") || model_lower.contains("o1") || model_lower.contains("davinci") {
+    } else if model_lower.contains("gpt")
+        || model_lower.contains("o1")
+        || model_lower.contains("davinci")
+    {
         ModelProvider::OpenAI
     } else if model_lower.contains("claude") {
         ModelProvider::Anthropic
-    } else if model_lower.contains("llama") || model_lower.contains("mistral") || model_lower.contains("codellama") {
+    } else if model_lower.contains("llama")
+        || model_lower.contains("mistral")
+        || model_lower.contains("codellama")
+    {
         ModelProvider::Ollama
     } else {
         ModelProvider::OpenAICompatible

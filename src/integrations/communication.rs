@@ -74,10 +74,20 @@ pub struct SlackConfig {
 /// Slack provider trait
 #[async_trait::async_trait]
 pub trait SlackProvider: Send + Sync {
-    async fn send_message(&self, channel: &str, text: &str, thread_ts: Option<&str>) -> IntegrationResult;
+    async fn send_message(
+        &self,
+        channel: &str,
+        text: &str,
+        thread_ts: Option<&str>,
+    ) -> IntegrationResult;
     async fn list_channels(&self) -> IntegrationResult;
     async fn list_messages(&self, channel: &str, limit: u32) -> IntegrationResult;
-    async fn upload_file(&self, channel: &str, file_path: &str, comment: Option<&str>) -> IntegrationResult;
+    async fn upload_file(
+        &self,
+        channel: &str,
+        file_path: &str,
+        comment: Option<&str>,
+    ) -> IntegrationResult;
     async fn set_status(&self, status_text: &str, status_emoji: &str) -> IntegrationResult;
     async fn search_messages(&self, query: &str) -> IntegrationResult;
     async fn add_reaction(&self, channel: &str, timestamp: &str, emoji: &str) -> IntegrationResult;
@@ -109,8 +119,18 @@ pub trait DiscordProvider: Send + Sync {
     async fn list_guilds(&self) -> IntegrationResult;
     async fn list_channels(&self, guild_id: &str) -> IntegrationResult;
     async fn list_messages(&self, channel_id: &str, limit: u32) -> IntegrationResult;
-    async fn add_reaction(&self, channel_id: &str, message_id: &str, emoji: &str) -> IntegrationResult;
-    async fn create_thread(&self, channel_id: &str, name: &str, message_id: Option<&str>) -> IntegrationResult;
+    async fn add_reaction(
+        &self,
+        channel_id: &str,
+        message_id: &str,
+        emoji: &str,
+    ) -> IntegrationResult;
+    async fn create_thread(
+        &self,
+        channel_id: &str,
+        name: &str,
+        message_id: Option<&str>,
+    ) -> IntegrationResult;
 }
 
 // =============================================================================
@@ -134,10 +154,21 @@ pub struct TeamsTeam {
 /// Teams provider trait
 #[async_trait::async_trait]
 pub trait TeamsProvider: Send + Sync {
-    async fn send_message(&self, team_id: &str, channel_id: &str, content: &str) -> IntegrationResult;
+    async fn send_message(
+        &self,
+        team_id: &str,
+        channel_id: &str,
+        content: &str,
+    ) -> IntegrationResult;
     async fn list_teams(&self) -> IntegrationResult;
     async fn list_channels(&self, team_id: &str) -> IntegrationResult;
-    async fn create_meeting(&self, subject: &str, start: &str, end: &str, attendees: &[String]) -> IntegrationResult;
+    async fn create_meeting(
+        &self,
+        subject: &str,
+        start: &str,
+        end: &str,
+        attendees: &[String],
+    ) -> IntegrationResult;
     async fn get_presence(&self, user_id: &str) -> IntegrationResult;
     async fn set_presence(&self, availability: &str, activity: &str) -> IntegrationResult;
 }
@@ -163,8 +194,18 @@ pub struct TelegramChat {
 #[async_trait::async_trait]
 pub trait TelegramProvider: Send + Sync {
     async fn send_message(&self, chat_id: &str, text: &str) -> IntegrationResult;
-    async fn send_photo(&self, chat_id: &str, photo_path: &str, caption: Option<&str>) -> IntegrationResult;
-    async fn send_document(&self, chat_id: &str, file_path: &str, caption: Option<&str>) -> IntegrationResult;
+    async fn send_photo(
+        &self,
+        chat_id: &str,
+        photo_path: &str,
+        caption: Option<&str>,
+    ) -> IntegrationResult;
+    async fn send_document(
+        &self,
+        chat_id: &str,
+        file_path: &str,
+        caption: Option<&str>,
+    ) -> IntegrationResult;
     async fn get_updates(&self, offset: Option<i64>) -> IntegrationResult;
     async fn set_webhook(&self, url: &str) -> IntegrationResult;
 }

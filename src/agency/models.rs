@@ -268,7 +268,7 @@ pub enum ModelProvider {
     Mistral,
     Cohere,
     Perplexity,
-    
+
     // Local Providers
     Ollama,
     LMStudio,
@@ -281,7 +281,7 @@ pub enum ModelProvider {
     KoboldCpp,
     TabbyML,
     Exo,
-    
+
     // Generic
     OpenAICompatible,
     Custom,
@@ -303,7 +303,7 @@ impl ModelProvider {
             ModelProvider::Mistral => Some("https://api.mistral.ai/v1"),
             ModelProvider::Cohere => Some("https://api.cohere.ai/v1"),
             ModelProvider::Perplexity => Some("https://api.perplexity.ai"),
-            
+
             // Local Providers
             ModelProvider::Ollama => Some("http://localhost:11434"),
             ModelProvider::LMStudio => Some("http://localhost:1234/v1"),
@@ -316,52 +316,54 @@ impl ModelProvider {
             ModelProvider::KoboldCpp => Some("http://localhost:5001/v1"),
             ModelProvider::TabbyML => Some("http://localhost:8080/v1"),
             ModelProvider::Exo => Some("http://localhost:52415/v1"),
-            
+
             // Generic
             ModelProvider::OpenAICompatible => None, // Requires custom endpoint
             ModelProvider::Custom => None,
         }
     }
-    
+
     /// Check if this provider is a local provider
     pub fn is_local(&self) -> bool {
-        matches!(self,
-            ModelProvider::Ollama |
-            ModelProvider::LMStudio |
-            ModelProvider::Jan |
-            ModelProvider::GPT4All |
-            ModelProvider::LocalAI |
-            ModelProvider::Llamafile |
-            ModelProvider::TextGenWebUI |
-            ModelProvider::VLLM |
-            ModelProvider::KoboldCpp |
-            ModelProvider::TabbyML |
-            ModelProvider::Exo
+        matches!(
+            self,
+            ModelProvider::Ollama
+                | ModelProvider::LMStudio
+                | ModelProvider::Jan
+                | ModelProvider::GPT4All
+                | ModelProvider::LocalAI
+                | ModelProvider::Llamafile
+                | ModelProvider::TextGenWebUI
+                | ModelProvider::VLLM
+                | ModelProvider::KoboldCpp
+                | ModelProvider::TabbyML
+                | ModelProvider::Exo
         )
     }
-    
+
     /// Check if this provider uses OpenAI-compatible API
     pub fn is_openai_compatible(&self) -> bool {
-        matches!(self,
-            ModelProvider::OpenAI |
-            ModelProvider::Azure |
-            ModelProvider::Groq |
-            ModelProvider::Together |
-            ModelProvider::Fireworks |
-            ModelProvider::DeepSeek |
-            ModelProvider::Mistral |
-            ModelProvider::Perplexity |
-            ModelProvider::LMStudio |
-            ModelProvider::Jan |
-            ModelProvider::GPT4All |
-            ModelProvider::LocalAI |
-            ModelProvider::Llamafile |
-            ModelProvider::TextGenWebUI |
-            ModelProvider::VLLM |
-            ModelProvider::KoboldCpp |
-            ModelProvider::TabbyML |
-            ModelProvider::Exo |
-            ModelProvider::OpenAICompatible
+        matches!(
+            self,
+            ModelProvider::OpenAI
+                | ModelProvider::Azure
+                | ModelProvider::Groq
+                | ModelProvider::Together
+                | ModelProvider::Fireworks
+                | ModelProvider::DeepSeek
+                | ModelProvider::Mistral
+                | ModelProvider::Perplexity
+                | ModelProvider::LMStudio
+                | ModelProvider::Jan
+                | ModelProvider::GPT4All
+                | ModelProvider::LocalAI
+                | ModelProvider::Llamafile
+                | ModelProvider::TextGenWebUI
+                | ModelProvider::VLLM
+                | ModelProvider::KoboldCpp
+                | ModelProvider::TabbyML
+                | ModelProvider::Exo
+                | ModelProvider::OpenAICompatible
         )
     }
 }

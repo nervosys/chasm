@@ -32,7 +32,9 @@ pub fn list_tools() -> Vec<Tool> {
         },
         Tool {
             name: "csm_find_workspace".to_string(),
-            description: Some("Find workspaces matching a pattern (project name or path)".to_string()),
+            description: Some(
+                "Find workspaces matching a pattern (project name or path)".to_string(),
+            ),
             input_schema: json!({
                 "type": "object",
                 "properties": {
@@ -46,7 +48,9 @@ pub fn list_tools() -> Vec<Tool> {
         },
         Tool {
             name: "csm_list_sessions".to_string(),
-            description: Some("List all chat sessions, optionally filtered by project path".to_string()),
+            description: Some(
+                "List all chat sessions, optionally filtered by project path".to_string(),
+            ),
             input_schema: json!({
                 "type": "object",
                 "properties": {
@@ -60,7 +64,10 @@ pub fn list_tools() -> Vec<Tool> {
         },
         Tool {
             name: "csm_list_orphaned".to_string(),
-            description: Some("List sessions on disk that are not in VS Code's index (invisible sessions)".to_string()),
+            description: Some(
+                "List sessions on disk that are not in VS Code's index (invisible sessions)"
+                    .to_string(),
+            ),
             input_schema: json!({
                 "type": "object",
                 "properties": {
@@ -74,7 +81,9 @@ pub fn list_tools() -> Vec<Tool> {
         },
         Tool {
             name: "csm_register_all".to_string(),
-            description: Some("Register all sessions from a workspace into VS Code's index".to_string()),
+            description: Some(
+                "Register all sessions from a workspace into VS Code's index".to_string(),
+            ),
             input_schema: json!({
                 "type": "object",
                 "properties": {
@@ -192,7 +201,9 @@ pub fn list_tools() -> Vec<Tool> {
         },
         Tool {
             name: "csm_detect".to_string(),
-            description: Some("Auto-detect workspace and available providers for a path".to_string()),
+            description: Some(
+                "Auto-detect workspace and available providers for a path".to_string(),
+            ),
             input_schema: json!({
                 "type": "object",
                 "properties": {
@@ -238,7 +249,9 @@ pub fn list_tools() -> Vec<Tool> {
         },
         Tool {
             name: "csm_db_get_session".to_string(),
-            description: Some("Get a specific session with all its messages from CSM database".to_string()),
+            description: Some(
+                "Get a specific session with all its messages from CSM database".to_string(),
+            ),
             input_schema: json!({
                 "type": "object",
                 "properties": {
@@ -270,7 +283,9 @@ pub fn list_tools() -> Vec<Tool> {
         },
         Tool {
             name: "csm_db_stats".to_string(),
-            description: Some("Get statistics about the CSM database (session counts by provider)".to_string()),
+            description: Some(
+                "Get statistics about the CSM database (session counts by provider)".to_string(),
+            ),
             input_schema: json!({
                 "type": "object",
                 "properties": {},
@@ -292,9 +307,7 @@ pub fn call_tool(name: &str, arguments: &HashMap<String, serde_json::Value>) -> 
             execute_find_workspace(pattern)
         }
         "csm_list_sessions" => {
-            let project_path = arguments
-                .get("project_path")
-                .and_then(|v| v.as_str());
+            let project_path = arguments.get("project_path").and_then(|v| v.as_str());
             execute_list_sessions(project_path)
         }
         "csm_list_orphaned" => {
@@ -323,11 +336,14 @@ pub fn call_tool(name: &str, arguments: &HashMap<String, serde_json::Value>) -> 
                         .collect()
                 })
                 .unwrap_or_default();
-            let titles: Option<Vec<String>> = arguments.get("titles").and_then(|v| v.as_array()).map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                    .collect()
-            });
+            let titles: Option<Vec<String>> = arguments
+                .get("titles")
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect()
+                });
             let path = arguments.get("path").and_then(|v| v.as_str());
             let force = arguments
                 .get("force")
@@ -566,7 +582,8 @@ fn execute_list_orphaned(path: Option<&str>) -> CallToolResult {
                 text: json!({
                     "status": "success",
                     "message": "Orphaned session check completed. See console output for details."
-                }).to_string(),
+                })
+                .to_string(),
             }],
             is_error: None,
         },
@@ -590,7 +607,8 @@ fn execute_register_all(path: Option<&str>, merge: bool, force: bool) -> CallToo
                     "message": "Sessions registered successfully",
                     "merge": merge,
                     "force": force
-                }).to_string(),
+                })
+                .to_string(),
             }],
             is_error: None,
         },
@@ -620,7 +638,8 @@ fn execute_register_sessions(
                     "ids": ids,
                     "titles": titles,
                     "force": force
-                }).to_string(),
+                })
+                .to_string(),
             }],
             is_error: None,
         },
@@ -702,7 +721,8 @@ fn execute_show_history(path: Option<&str>) -> CallToolResult {
                 text: json!({
                     "status": "success",
                     "message": "History displayed. See console output for details."
-                }).to_string(),
+                })
+                .to_string(),
             }],
             is_error: None,
         },
@@ -726,7 +746,8 @@ fn execute_merge_sessions(path: Option<&str>, title: Option<&str>, force: bool) 
                     "message": "Sessions merged successfully",
                     "title": title,
                     "force": force
-                }).to_string(),
+                })
+                .to_string(),
             }],
             is_error: None,
         },
@@ -752,7 +773,8 @@ fn execute_search(query: &str, limit: Option<usize>) -> CallToolResult {
                     "query": query,
                     "limit": limit,
                     "message": "Search completed. See console output for results."
-                }).to_string(),
+                })
+                .to_string(),
             }],
             is_error: None,
         },
@@ -774,7 +796,8 @@ fn execute_detect(path: Option<&str>) -> CallToolResult {
                 text: json!({
                     "status": "success",
                     "message": "Detection completed. See console output for details."
-                }).to_string(),
+                })
+                .to_string(),
             }],
             is_error: None,
         },
@@ -857,7 +880,8 @@ fn execute_db_list_sessions(
                 text: json!({
                     "error": "CSM database not found",
                     "message": "The csm-web database has not been initialized."
-                }).to_string(),
+                })
+                .to_string(),
             }],
             is_error: Some(true),
         };
@@ -916,7 +940,8 @@ fn execute_db_get_session(session_id: &str) -> CallToolResult {
             content: vec![ToolContent::Text {
                 text: json!({
                     "error": "CSM database not found"
-                }).to_string(),
+                })
+                .to_string(),
             }],
             is_error: Some(true),
         };
@@ -985,7 +1010,8 @@ fn execute_db_search(query: &str, limit: usize) -> CallToolResult {
             content: vec![ToolContent::Text {
                 text: json!({
                     "error": "CSM database not found"
-                }).to_string(),
+                })
+                .to_string(),
             }],
             is_error: Some(true),
         };
@@ -1037,7 +1063,8 @@ fn execute_db_stats() -> CallToolResult {
                 text: json!({
                     "error": "CSM database not found",
                     "db_path": db::get_csm_db_path().display().to_string()
-                }).to_string(),
+                })
+                .to_string(),
             }],
             is_error: Some(true),
         };

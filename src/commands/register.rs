@@ -14,8 +14,8 @@ use std::path::PathBuf;
 use crate::error::CsmError;
 use crate::models::ChatSession;
 use crate::storage::{
-    add_session_to_index, get_workspace_storage_db, is_vscode_running,
-    read_chat_session_index, register_all_sessions_from_directory,
+    add_session_to_index, get_workspace_storage_db, is_vscode_running, read_chat_session_index,
+    register_all_sessions_from_directory,
 };
 use crate::workspace::find_workspace_by_path;
 
@@ -31,7 +31,7 @@ pub fn register_all(project_path: Option<&str>, merge: bool, force: bool) -> Res
             "[CSM]".cyan().bold(),
             path.display()
         );
-        
+
         // Use the existing merge functionality
         let path_str = path.to_string_lossy().to_string();
         return crate::commands::history_merge(
@@ -97,8 +97,15 @@ pub fn register_all(project_path: Option<&str>, merge: bool, force: bool) -> Res
         "[!]".yellow()
     );
     println!("   To see the new sessions, do one of the following:");
-    println!("   * Run: {} (if CSM extension is installed)", "code --command csm.reloadAndShowChats".cyan());
-    println!("   * Or press {} in VS Code and run {}", "Ctrl+Shift+P".cyan(), "Developer: Reload Window".cyan());
+    println!(
+        "   * Run: {} (if CSM extension is installed)",
+        "code --command csm.reloadAndShowChats".cyan()
+    );
+    println!(
+        "   * Or press {} in VS Code and run {}",
+        "Ctrl+Shift+P".cyan(),
+        "Developer: Reload Window".cyan()
+    );
     println!("   * Or restart VS Code");
 
     Ok(())
@@ -146,17 +153,14 @@ pub fn register_sessions(
         );
 
         let sessions = find_sessions_by_titles(&chat_sessions_dir, titles)?;
-        
+
         for (session, session_path) in sessions {
-            let session_id = session
-                .session_id
-                .clone()
-                .unwrap_or_else(|| {
-                    session_path
-                        .file_stem()
-                        .map(|s| s.to_string_lossy().to_string())
-                        .unwrap_or_default()
-                });
+            let session_id = session.session_id.clone().unwrap_or_else(|| {
+                session_path
+                    .file_stem()
+                    .map(|s| s.to_string_lossy().to_string())
+                    .unwrap_or_default()
+            });
             let title = session.title();
 
             add_session_to_index(
@@ -273,10 +277,7 @@ pub fn list_orphaned(project_path: Option<&str>) -> Result<()> {
     let chat_sessions_dir = ws_path.join("chatSessions");
 
     if !chat_sessions_dir.exists() {
-        println!(
-            "{} No chatSessions directory found",
-            "[!]".yellow()
-        );
+        println!("{} No chatSessions directory found", "[!]".yellow());
         return Ok(());
     }
 
@@ -344,15 +345,9 @@ pub fn list_orphaned(project_path: Option<&str>) -> Result<()> {
         );
     }
 
-    println!(
-        "\n{} To register all orphaned sessions:",
-        "->".cyan()
-    );
+    println!("\n{} To register all orphaned sessions:", "->".cyan());
     println!("   csm register all --force");
-    println!(
-        "\n{} To register specific sessions:",
-        "->".cyan()
-    );
+    println!("\n{} To register specific sessions:", "->".cyan());
     println!("   csm register session <ID1> <ID2> ... --force");
 
     Ok(())
@@ -363,7 +358,12 @@ fn count_sessions_in_directory(dir: &PathBuf) -> Result<usize> {
     let mut count = 0;
     for entry in std::fs::read_dir(dir)? {
         let entry = entry?;
-        if entry.path().extension().map(|e| e == "json").unwrap_or(false) {
+        if entry
+            .path()
+            .extension()
+            .map(|e| e == "json")
+            .unwrap_or(false)
+        {
             count += 1;
         }
     }
@@ -425,7 +425,7 @@ fn find_sessions_by_titles(
             if let Ok(content) = std::fs::read_to_string(&path) {
                 if let Ok(session) = serde_json::from_str::<ChatSession>(&content) {
                     let session_title = session.title().to_lowercase();
-                    
+
                     for pattern in &title_patterns {
                         if session_title.contains(pattern) {
                             matches.push((session, path.clone()));

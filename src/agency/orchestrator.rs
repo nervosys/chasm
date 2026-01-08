@@ -139,11 +139,9 @@ impl Orchestrator {
             OrchestrationType::Sequential => self.run_sequential(pipeline, input, ctx).await,
             OrchestrationType::Parallel => self.run_parallel(pipeline, input, ctx).await,
             OrchestrationType::Loop => self.run_loop(pipeline, input, ctx).await,
-            OrchestrationType::Hierarchical => {
-                Err(AgencyError::OrchestrationError(
-                    "Use run_swarm for hierarchical orchestration".to_string(),
-                ))
-            }
+            OrchestrationType::Hierarchical => Err(AgencyError::OrchestrationError(
+                "Use run_swarm for hierarchical orchestration".to_string(),
+            )),
         }
     }
 
@@ -176,7 +174,10 @@ impl Orchestrator {
             results.push(result);
         }
 
-        let final_response = results.last().map(|r| r.response.clone()).unwrap_or_default();
+        let final_response = results
+            .last()
+            .map(|r| r.response.clone())
+            .unwrap_or_default();
 
         Ok(OrchestratorResult {
             response: final_response,
@@ -209,7 +210,9 @@ impl Orchestrator {
                 let mut ctx = ExecutionContext::new(&session);
                 ctx.user_id = user_id;
 
-                executor.execute(agent.as_ref(), &mut session, &input, &mut ctx).await
+                executor
+                    .execute(agent.as_ref(), &mut session, &input, &mut ctx)
+                    .await
             }));
         }
 
@@ -297,7 +300,10 @@ impl Orchestrator {
             current_input = result.response;
         }
 
-        let final_response = results.last().map(|r| r.response.clone()).unwrap_or_default();
+        let final_response = results
+            .last()
+            .map(|r| r.response.clone())
+            .unwrap_or_default();
 
         Ok(OrchestratorResult {
             response: final_response,
@@ -448,10 +454,7 @@ mod tests {
         let executor = Arc::new(Executor::new(tool_registry));
         let orchestrator = Orchestrator::new(executor);
 
-        let agents = vec![
-            create_test_agent("researcher"),
-            create_test_agent("writer"),
-        ];
+        let agents = vec![create_test_agent("researcher"), create_test_agent("writer")];
         let pipeline = Pipeline::sequential("research_pipeline", agents);
 
         let session = Session::new("test", None);
@@ -473,10 +476,7 @@ mod tests {
         let executor = Arc::new(Executor::new(tool_registry));
         let orchestrator = Orchestrator::new(executor);
 
-        let agents = vec![
-            create_test_agent("analyst1"),
-            create_test_agent("analyst2"),
-        ];
+        let agents = vec![create_test_agent("analyst1"), create_test_agent("analyst2")];
         let pipeline = Pipeline::parallel("analysis_pipeline", agents);
 
         let session = Session::new("test", None);

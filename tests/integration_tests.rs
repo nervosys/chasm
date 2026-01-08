@@ -241,8 +241,8 @@ mod model_tests {
 // =============================================================================
 
 mod cli_tests {
-    use clap::Parser;
     use chasm::cli::{Cli, Commands};
+    use clap::Parser;
 
     #[test]
     fn test_cli_run_tui_command() {

@@ -79,7 +79,10 @@ impl Tool {
         for param in &self.parameters {
             let mut prop = serde_json::Map::new();
             prop.insert("type".to_string(), Value::String(param.param_type.clone()));
-            prop.insert("description".to_string(), Value::String(param.description.clone()));
+            prop.insert(
+                "description".to_string(),
+                Value::String(param.description.clone()),
+            );
 
             if let Some(enum_vals) = &param.enum_values {
                 prop.insert(
@@ -171,17 +174,32 @@ impl ToolBuilder {
     }
 
     /// Add a string parameter
-    pub fn string_param(self, name: impl Into<String>, description: impl Into<String>, required: bool) -> Self {
+    pub fn string_param(
+        self,
+        name: impl Into<String>,
+        description: impl Into<String>,
+        required: bool,
+    ) -> Self {
         self.parameter(name, "string", description, required)
     }
 
     /// Add a number parameter
-    pub fn number_param(self, name: impl Into<String>, description: impl Into<String>, required: bool) -> Self {
+    pub fn number_param(
+        self,
+        name: impl Into<String>,
+        description: impl Into<String>,
+        required: bool,
+    ) -> Self {
         self.parameter(name, "number", description, required)
     }
 
     /// Add a boolean parameter
-    pub fn bool_param(self, name: impl Into<String>, description: impl Into<String>, required: bool) -> Self {
+    pub fn bool_param(
+        self,
+        name: impl Into<String>,
+        description: impl Into<String>,
+        required: bool,
+    ) -> Self {
         self.parameter(name, "boolean", description, required)
     }
 
@@ -268,7 +286,10 @@ impl ToolRegistry {
 
     /// Get tool definitions for model API
     pub fn to_definitions(&self) -> Vec<Value> {
-        self.tools.values().map(|t| t.to_function_definition()).collect()
+        self.tools
+            .values()
+            .map(|t| t.to_function_definition())
+            .collect()
     }
 
     /// Register builtin tools
@@ -301,7 +322,11 @@ impl BuiltinTools {
         ToolBuilder::new("web_search")
             .description("Search the web for information. Returns relevant snippets and URLs.")
             .string_param("query", "The search query", true)
-            .number_param("max_results", "Maximum number of results (default: 5)", false)
+            .number_param(
+                "max_results",
+                "Maximum number of results (default: 5)",
+                false,
+            )
             .category(ToolCategory::Search)
             .build()
     }

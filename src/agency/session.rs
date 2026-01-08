@@ -28,7 +28,9 @@ impl SessionState {
     }
 
     pub fn get<T: for<'de> Deserialize<'de>>(&self, key: &str) -> Option<T> {
-        self.data.get(key).and_then(|v| serde_json::from_value(v.clone()).ok())
+        self.data
+            .get(key)
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
     }
 
     pub fn set<T: Serialize>(&mut self, key: impl Into<String>, value: T) {
@@ -219,7 +221,10 @@ impl SessionManager {
 
     /// Initialize database schema
     fn init_schema(&self) -> AgencyResult<()> {
-        let conn = self.conn.lock().map_err(|e| AgencyError::DatabaseError(e.to_string()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AgencyError::DatabaseError(e.to_string()))?;
         conn.execute_batch(
             r#"
             CREATE TABLE IF NOT EXISTS Agency_sessions (
@@ -244,7 +249,11 @@ impl SessionManager {
     }
 
     /// Create a new session
-    pub fn create(&self, agent_name: impl Into<String>, user_id: Option<String>) -> AgencyResult<Session> {
+    pub fn create(
+        &self,
+        agent_name: impl Into<String>,
+        user_id: Option<String>,
+    ) -> AgencyResult<Session> {
         let session = Session::new(agent_name, user_id);
         self.save(&session)?;
         Ok(session)
@@ -252,7 +261,10 @@ impl SessionManager {
 
     /// Save a session
     pub fn save(&self, session: &Session) -> AgencyResult<()> {
-        let conn = self.conn.lock().map_err(|e| AgencyError::DatabaseError(e.to_string()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AgencyError::DatabaseError(e.to_string()))?;
         conn.execute(
             r#"
             INSERT OR REPLACE INTO Agency_sessions 
@@ -277,7 +289,10 @@ impl SessionManager {
 
     /// Get a session by ID
     pub fn get(&self, id: &str) -> AgencyResult<Option<Session>> {
-        let conn = self.conn.lock().map_err(|e| AgencyError::DatabaseError(e.to_string()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AgencyError::DatabaseError(e.to_string()))?;
         let session = conn
             .query_row(
                 "SELECT * FROM Agency_sessions WHERE id = ?1",
@@ -288,10 +303,13 @@ impl SessionManager {
                         agent_name: row.get(1)?,
                         user_id: row.get(2)?,
                         title: row.get(3)?,
-                        messages: serde_json::from_str(&row.get::<_, String>(4)?).unwrap_or_default(),
+                        messages: serde_json::from_str(&row.get::<_, String>(4)?)
+                            .unwrap_or_default(),
                         state: serde_json::from_str(&row.get::<_, String>(5)?).unwrap_or_default(),
-                        token_usage: serde_json::from_str(&row.get::<_, String>(6)?).unwrap_or_default(),
-                        metadata: serde_json::from_str(&row.get::<_, String>(7)?).unwrap_or_default(),
+                        token_usage: serde_json::from_str(&row.get::<_, String>(6)?)
+                            .unwrap_or_default(),
+                        metadata: serde_json::from_str(&row.get::<_, String>(7)?)
+                            .unwrap_or_default(),
                         created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
                             .map(|dt| dt.with_timezone(&Utc))
                             .unwrap_or_else(|_| Utc::now()),
@@ -306,8 +324,15 @@ impl SessionManager {
     }
 
     /// List sessions for an agent
-    pub fn list_by_agent(&self, agent_name: &str, limit: Option<u32>) -> AgencyResult<Vec<Session>> {
-        let conn = self.conn.lock().map_err(|e| AgencyError::DatabaseError(e.to_string()))?;
+    pub fn list_by_agent(
+        &self,
+        agent_name: &str,
+        limit: Option<u32>,
+    ) -> AgencyResult<Vec<Session>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AgencyError::DatabaseError(e.to_string()))?;
         let limit = limit.unwrap_or(100);
         let mut stmt = conn.prepare(
             "SELECT * FROM Agency_sessions WHERE agent_name = ?1 ORDER BY updated_at DESC LIMIT ?2",
@@ -321,7 +346,8 @@ impl SessionManager {
                     title: row.get(3)?,
                     messages: serde_json::from_str(&row.get::<_, String>(4)?).unwrap_or_default(),
                     state: serde_json::from_str(&row.get::<_, String>(5)?).unwrap_or_default(),
-                    token_usage: serde_json::from_str(&row.get::<_, String>(6)?).unwrap_or_default(),
+                    token_usage: serde_json::from_str(&row.get::<_, String>(6)?)
+                        .unwrap_or_default(),
                     metadata: serde_json::from_str(&row.get::<_, String>(7)?).unwrap_or_default(),
                     created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
                         .map(|dt| dt.with_timezone(&Utc))
@@ -338,7 +364,10 @@ impl SessionManager {
 
     /// List sessions for a user
     pub fn list_by_user(&self, user_id: &str, limit: Option<u32>) -> AgencyResult<Vec<Session>> {
-        let conn = self.conn.lock().map_err(|e| AgencyError::DatabaseError(e.to_string()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AgencyError::DatabaseError(e.to_string()))?;
         let limit = limit.unwrap_or(100);
         let mut stmt = conn.prepare(
             "SELECT * FROM Agency_sessions WHERE user_id = ?1 ORDER BY updated_at DESC LIMIT ?2",
@@ -352,7 +381,8 @@ impl SessionManager {
                     title: row.get(3)?,
                     messages: serde_json::from_str(&row.get::<_, String>(4)?).unwrap_or_default(),
                     state: serde_json::from_str(&row.get::<_, String>(5)?).unwrap_or_default(),
-                    token_usage: serde_json::from_str(&row.get::<_, String>(6)?).unwrap_or_default(),
+                    token_usage: serde_json::from_str(&row.get::<_, String>(6)?)
+                        .unwrap_or_default(),
                     metadata: serde_json::from_str(&row.get::<_, String>(7)?).unwrap_or_default(),
                     created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?)
                         .map(|dt| dt.with_timezone(&Utc))
@@ -369,7 +399,10 @@ impl SessionManager {
 
     /// Delete a session
     pub fn delete(&self, id: &str) -> AgencyResult<bool> {
-        let conn = self.conn.lock().map_err(|e| AgencyError::DatabaseError(e.to_string()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AgencyError::DatabaseError(e.to_string()))?;
         let rows = conn.execute("DELETE FROM Agency_sessions WHERE id = ?1", params![id])?;
         Ok(rows > 0)
     }
