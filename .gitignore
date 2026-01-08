@@ -1,0 +1,36 @@
+# Build artifacts
+/target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database files
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Log files
+*.log
+
+# Test output
+test_output.json
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Coverage
+*.profraw
+*.profdata
+lcov.info
+coverage/

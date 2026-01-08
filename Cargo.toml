@@ -1,0 +1,121 @@
+[package]
+name = "chasm"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.75"
+description = "Universal chat session manager - harvest, merge, and analyze AI chat history from VS Code, Cursor, and other editors"
+authors = ["Nervosys LLC <hello@nervosys.com>"]
+license = "Apache-2.0"
+repository = "https://github.com/nervosys/chasm"
+homepage = "https://github.com/nervosys/chasm"
+documentation = "https://docs.rs/chasm"
+readme = "README.md"
+keywords = ["chat", "ai", "copilot", "session", "history"]
+categories = ["command-line-utilities", "development-tools", "database"]
+exclude = ["target/", "tests/fixtures/", ".github/", "*.db", "*.log"]
+
+[dependencies]
+# CLI framework
+clap = { version = "4.4", features = ["derive", "env"] }
+
+# Async runtime
+tokio = { version = "1.34", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# SQLite for VS Code state.vscdb
+rusqlite = { version = "0.30", features = ["bundled"] }
+
+# File system utilities
+walkdir = "2.4"
+dirs = "5.0"
+glob = "0.3"
+
+# URL encoding/decoding
+urlencoding = "2.1"
+
+# UUID generation
+uuid = { version = "1.6", features = ["v4"] }
+
+# Date/time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Table formatting for CLI output
+tabled = "0.15"
+
+# Colored terminal output
+colored = "2.1"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Async trait support (for ADK)
+async-trait = "0.1"
+
+# Process management (check if VS Code is running)
+sysinfo = "0.30"
+
+# TUI framework
+ratatui = "0.29"
+crossterm = "0.28"
+
+# HTTP client for cloud API providers (using rustls for cross-compilation compatibility)
+reqwest = { version = "0.11", default-features = false, features = [
+    "json",
+    "blocking",
+    "cookies",
+    "rustls-tls",
+] }
+
+# HTTP server for API (using rustls for cross-compilation compatibility)
+actix-web = { version = "4", default-features = false, features = [
+    "rustls-0_23",
+] }
+actix-http = { version = "3", features = ["ws"] }
+actix-cors = "0.7"
+
+# Async streaming for SSE
+async-stream = "0.3"
+futures-util = { version = "0.3", features = ["sink"] }
+
+# Base64 encoding for API requests
+base64 = "0.21"
+
+# AES decryption for browser cookies
+aes-gcm = "0.10"
+
+# JWT authentication
+jsonwebtoken = "9.3"
+
+# Password hashing
+sha2 = "0.10"
+
+# Windows DPAPI for cookie decryption
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = [
+    "Win32_Security_Cryptography",
+    "Win32_System_Memory",
+    "Win32_Foundation",
+] }
+
+[dev-dependencies]
+tempfile = "3.9"
+assert_cmd = "2.0"
+predicates = "3.0"
+
+[[bin]]
+name = "chasm"
+path = "src/main.rs"
+
+[[bin]]
+name = "csm-mcp"
+path = "src/mcp/main.rs"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+# Optimize for size
