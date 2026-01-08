@@ -219,6 +219,183 @@ chasm export path /backup/dir /path/to/your/project
 | `chasm api serve` | Start the REST API server |
 | `chasm api serve --port 8787` | Start on specific port |
 
+
+## 🤖 Agency - Agentic Coding CLI
+
+Chasm includes a full **agentic coding toolkit** similar to Claude Code CLI, but provider-agnostic. Run coding tasks with any LLM backend.
+
+### Available Tools
+
+```bash
+chasm agency tools
+```
+
+| Tool | Description |
+|------|-------------|
+| `file_read` | Read file contents |
+| `file_write` | Write or modify files |
+| `terminal` | Execute shell commands |
+| `code_search` | Search codebase for symbols |
+| `web_search` | Search the web for information |
+| `http_request` | Make HTTP requests |
+| `calculator` | Perform calculations |
+
+### Agent Roles
+
+```bash
+chasm agency list
+```
+
+- **coordinator** - Orchestrates multi-agent workflows
+- **coder** - Writes and refactors code
+- **reviewer** - Reviews code for issues
+- **tester** - Generates and runs tests
+- **researcher** - Gathers information
+- **executor** - Runs commands and tasks
+
+### Orchestration Modes
+
+```bash
+chasm agency modes
+```
+
+| Mode | Description |
+|------|-------------|
+| `single` | Traditional single-agent (like Claude Code) |
+| `sequential` | Agents execute one after another |
+| `parallel` | Multiple agents work simultaneously |
+| `swarm` | Coordinated multi-agent collaboration |
+| `hierarchical` | Lead agent delegates to specialists |
+| `debate` | Agents debate to find best solution |
+
+### Usage Examples
+
+```bash
+# Simple coding task (single agent)
+chasm agency run "Add error handling to main.rs"
+
+# Specify a model
+chasm agency run -m gpt-4o "Refactor this function to use async/await"
+
+# Use local Ollama model
+chasm agency run -m ollama/codellama "Write unit tests for lib.rs"
+
+# Multi-agent swarm for complex tasks
+chasm agency run --orchestration swarm "Build a REST API with authentication"
+
+# Parallel agents for speed
+chasm agency run --orchestration parallel "Analyze and fix all TODO comments"
+```
+
+## 🔄 Unified Chat Interface - No Vendor Lock-in
+
+Chasm provides a **unified interface to all chat systems**, preventing vendor lock-in. Continue conversations seamlessly across providers.
+
+### The Problem
+
+Your AI chat history is scattered across:
+- VS Code Copilot (SQLite + JSON in workspaceStorage)
+- Cursor (proprietary format)
+- ChatGPT (web-only, export required)
+- Claude (web-only)
+- Local LLMs (various formats)
+
+Each uses different formats, storage locations, and APIs. If you switch providers, you lose context.
+
+### The Solution
+
+Chasm normalizes all sessions into a **universal format** and lets you:
+
+1. **Import from any provider** into a unified database
+2. **Export to any format** (JSON, Markdown, CSV)
+3. **Continue sessions** with a different provider
+4. **Search across all history** regardless of source
+
+### Continue a Session with Any Provider
+
+```bash
+# List all your sessions from all providers
+chasm list sessions
+
+# Export a Copilot session
+chasm export sessions abc123 --format json --output session.json
+
+# The exported session contains the full conversation:
+# - All messages (user + assistant)
+# - Tool invocations and results
+# - Timestamps and metadata
+# - File references and code blocks
+
+# Continue the conversation with a different provider:
+chasm agency run --context session.json "Continue implementing the feature"
+
+# Or import into the harvest database for unified access
+chasm harvest import session.json
+```
+
+### Cross-Provider Workflow Example
+
+```bash
+# 1. Start a project with GitHub Copilot in VS Code
+#    (sessions automatically tracked)
+
+# 2. Later, recover and view your sessions
+chasm fetch path /path/to/project
+chasm list sessions --project-path /path/to/project
+
+# 3. Export the session for portability
+chasm export path ./backup /path/to/project
+
+# 4. Continue with Claude, GPT-4, or local Ollama
+chasm agency run -m claude-3 --context ./backup/session.json \
+  "Review the code we wrote and suggest improvements"
+
+# 5. Or merge multiple sessions into one unified history
+chasm merge path /path/to/project
+
+# 6. Search across ALL your AI conversations
+chasm harvest search "authentication implementation"
+```
+
+### Universal Session Format
+
+Chasm's normalized format includes:
+
+```json
+{
+  "id": "uuid",
+  "title": "Session title",
+  "provider": "copilot|cursor|chatgpt|claude|ollama|...",
+  "workspace": "/path/to/project",
+  "created_at": "2026-01-08T12:00:00Z",
+  "messages": [
+    {
+      "role": "user|assistant|system",
+      "content": "Message text",
+      "timestamp": "2026-01-08T12:00:00Z",
+      "tool_calls": [...],
+      "references": [...]
+    }
+  ],
+  "metadata": {
+    "model": "gpt-4o",
+    "total_tokens": 15000,
+    "files_referenced": ["src/main.rs", "Cargo.toml"]
+  }
+}
+```
+
+### Benefits
+
+| Feature | Vendor Lock-in | With Chasm |
+|---------|----------------|------------|
+| Switch providers | Lose all history | Keep everything |
+| Search old chats | Per-provider only | Search all at once |
+| Backup conversations | Manual exports | Automatic harvesting |
+| Continue sessions | Start fresh | Full context preserved |
+| Compare providers | Impossible | Same task, different models |
+
+
 ## 🔌 API Server
 
 Start the REST API server for integration with web/mobile apps:
