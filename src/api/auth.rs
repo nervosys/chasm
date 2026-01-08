@@ -19,7 +19,18 @@ use uuid::Uuid;
 // =============================================================================
 
 /// JWT secret key - in production, this should come from environment variables
-const JWT_SECRET: &[u8] = b"csm_jwt_secret_key_change_in_production_2024";
+use std::sync::LazyLock;
+
+/// JWT secret key - uses CSM_JWT_SECRET environment variable or a development default
+/// WARNING: Always set CSM_JWT_SECRET in production!
+static JWT_SECRET: LazyLock<Vec<u8>> = LazyLock::new(|| {
+    std::env::var("CSM_JWT_SECRET")
+        .unwrap_or_else(|_| {
+            eprintln!("[WARN] CSM_JWT_SECRET not set, using insecure default. Set this in production!");
+            "csm_dev_jwt_secret_change_me".to_string()
+        })
+        .into_bytes()
+});
 const JWT_EXPIRY_HOURS: i64 = 24;
 const REFRESH_TOKEN_EXPIRY_DAYS: i64 = 30;
 
@@ -374,7 +385,7 @@ pub fn generate_access_token(user: &User) -> Option<String> {
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(JWT_SECRET),
+        &EncodingKey::from_secret(&JWT_SECRET),
     )
     .ok()
 }
@@ -396,7 +407,7 @@ pub fn generate_refresh_token(user: &User) -> Option<String> {
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(JWT_SECRET),
+        &EncodingKey::from_secret(&JWT_SECRET),
     )
     .ok()
 }
@@ -406,7 +417,7 @@ pub fn validate_token(token: &str) -> Option<AuthenticatedUser> {
     let validation = Validation::new(Algorithm::HS256);
 
     let token_data =
-        decode::<Claims>(token, &DecodingKey::from_secret(JWT_SECRET), &validation).ok()?;
+        decode::<Claims>(token, &DecodingKey::from_secret(&JWT_SECRET), &validation).ok()?;
 
     let claims = token_data.claims;
 
@@ -427,7 +438,7 @@ pub fn validate_refresh_token(token: &str) -> Option<AuthenticatedUser> {
     let validation = Validation::new(Algorithm::HS256);
 
     let token_data =
-        decode::<Claims>(token, &DecodingKey::from_secret(JWT_SECRET), &validation).ok()?;
+        decode::<Claims>(token, &DecodingKey::from_secret(&JWT_SECRET), &validation).ok()?;
 
     let claims = token_data.claims;
 
@@ -1247,3 +1258,5 @@ pub fn configure_auth_routes(cfg: &mut web::ServiceConfig) {
             ),
     );
 }
+
+
