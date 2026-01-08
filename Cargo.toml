@@ -107,7 +107,7 @@ assert_cmd = "2.0"
 predicates = "3.0"
 
 [[bin]]
-name = "chasm-cli"
+name = "chasm"
 path = "src/main.rs"
 
 [[bin]]
