@@ -9,7 +9,7 @@
 //! - SessionWithPath
 //! - WorkspaceJson
 
-use chasm::models::{
+use chasm_cli::models::{
     ChatMessage, ChatRequest, ChatSession, ChatSessionIndex, ChatSessionIndexEntry,
     SessionWithPath, Workspace, WorkspaceJson,
 };
