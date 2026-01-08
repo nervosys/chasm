@@ -1,16 +1,18 @@
 # cargo-deny configuration
 # Run with: cargo deny check
 
+[graph]
+targets = []
+all-features = true
+
 [advisories]
-db-path = "~/.cargo/advisory-db"
-db-urls = ["https://github.com/rustsec/advisory-db"]
-vulnerability = "deny"
-unmaintained = "warn"
-yanked = "warn"
-notice = "warn"
+ignore = [
+    # unmaintained crates from transitive dependencies
+    { id = "RUSTSEC-2024-0436", reason = "paste is unmaintained but used by ratatui, no alternative" },
+    { id = "RUSTSEC-2024-0370", reason = "proc-macro-error unmaintained but used by tabled_derive" },
+]
 
 [licenses]
-unlicensed = "deny"
 allow = [
     "MIT",
     "Apache-2.0",
@@ -20,23 +22,17 @@ allow = [
     "ISC",
     "Zlib",
     "MPL-2.0",
-    "Unicode-DFS-2016",
-    "CC0-1.0",
+    "Unicode-3.0",
+    "CDLA-Permissive-2.0",
 ]
-copyleft = "warn"
 confidence-threshold = 0.8
 
 [bans]
 multiple-versions = "warn"
 wildcards = "allow"
 highlight = "all"
-
-# Deny specific crates
 deny = []
-
-# Skip certain crates from duplicate detection
 skip = []
-
 skip-tree = []
 
 [sources]
