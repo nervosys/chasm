@@ -19,11 +19,11 @@ use uuid::Uuid;
 // =============================================================================
 
 /// JWT secret key - in production, this should come from environment variables
-use std::sync::LazyLock;
+use once_cell::sync::Lazy;
 
 /// JWT secret key - uses CSM_JWT_SECRET environment variable or a development default
 /// WARNING: Always set CSM_JWT_SECRET in production!
-static JWT_SECRET: LazyLock<Vec<u8>> = LazyLock::new(|| {
+static JWT_SECRET: Lazy<Vec<u8>> = Lazy::new(|| {
     std::env::var("CSM_JWT_SECRET")
         .unwrap_or_else(|_| {
             eprintln!("[WARN] CSM_JWT_SECRET not set, using insecure default. Set this in production!");
@@ -40,8 +40,10 @@ const REFRESH_TOKEN_EXPIRY_DAYS: i64 = 30;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum SubscriptionTier {
     /// Free tier - basic sync, limited features
+    #[default]
     Free,
     /// Pro tier - full sync, all features, priority support
     Pro,
@@ -49,11 +51,6 @@ pub enum SubscriptionTier {
     Enterprise,
 }
 
-impl Default for SubscriptionTier {
-    fn default() -> Self {
-        Self::Free
-    }
-}
 
 impl SubscriptionTier {
     pub fn as_str(&self) -> &'static str {
@@ -1258,5 +1255,6 @@ pub fn configure_auth_routes(cfg: &mut web::ServiceConfig) {
             ),
     );
 }
+
 
 

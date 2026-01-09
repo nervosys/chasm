@@ -29,10 +29,12 @@ use std::collections::HashMap;
 /// Permission level for proactive actions
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum PermissionLevel {
     /// Agent can only send notifications, no actions taken
     NotifyOnly,
     /// Auto-approve low-risk actions (notifications, reading data)
+    #[default]
     LowRisk,
     /// Auto-approve medium-risk (scheduling, drafts)
     MediumRisk,
@@ -40,11 +42,6 @@ pub enum PermissionLevel {
     HighAutonomy,
 }
 
-impl Default for PermissionLevel {
-    fn default() -> Self {
-        Self::LowRisk
-    }
-}
 
 impl PermissionLevel {
     /// Actions that can be auto-approved at this level

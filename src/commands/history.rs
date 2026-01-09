@@ -20,11 +20,23 @@ use crate::workspace::{
 
 /// Show all chat sessions across workspaces for current project
 pub fn history_show(project_path: Option<&str>) -> Result<()> {
-    let project_path = project_path.map(|p| p.to_string()).unwrap_or_else(|| {
-        std::env::current_dir()
+    // Resolve the project path, handling "." specially
+    let project_path = match project_path {
+        Some(".") | None => std::env::current_dir()
             .map(|p| p.to_string_lossy().to_string())
-            .unwrap_or_else(|_| ".".to_string())
-    });
+            .unwrap_or_else(|_| ".".to_string()),
+        Some(p) => {
+            // If it's a relative path, try to resolve it
+            let path = Path::new(p);
+            if path.is_relative() {
+                std::env::current_dir()
+                    .map(|cwd| cwd.join(path).to_string_lossy().to_string())
+                    .unwrap_or_else(|_| p.to_string())
+            } else {
+                p.to_string()
+            }
+        }
+    };
 
     let project_name = Path::new(&project_path)
         .file_name()

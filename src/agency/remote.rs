@@ -60,6 +60,7 @@ pub struct RemoteNode {
 /// Node status
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum NodeStatus {
     /// Node is online and healthy
     Online,
@@ -70,14 +71,10 @@ pub enum NodeStatus {
     /// Node is in maintenance mode
     Maintenance,
     /// Node status is unknown
+    #[default]
     Unknown,
 }
 
-impl Default for NodeStatus {
-    fn default() -> Self {
-        NodeStatus::Unknown
-    }
-}
 
 /// Hardware information for a node
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -181,18 +178,15 @@ pub enum RemoteTaskStatus {
 /// Task priority levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum TaskPriority {
     Low = 0,
+    #[default]
     Normal = 1,
     High = 2,
     Critical = 3,
 }
 
-impl Default for TaskPriority {
-    fn default() -> Self {
-        TaskPriority::Normal
-    }
-}
 
 /// Task result
 #[derive(Debug, Clone, Serialize, Deserialize)]

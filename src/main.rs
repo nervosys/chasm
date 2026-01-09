@@ -4,6 +4,9 @@
 //!
 //! A CLI tool to manage and merge chat sessions across workspaces.
 
+#![allow(clippy::upper_case_acronyms)]
+#![allow(clippy::type_complexity)]
+
 mod agency;
 mod api;
 mod browser;
@@ -58,22 +61,36 @@ fn main() -> Result<()> {
         // ====================================================================
         Commands::Find { command } => match command {
             Some(FindCommands::Workspace { pattern }) => {
-                let pattern = pattern.unwrap_or_else(|| get_current_dir_name());
+                let pattern = pattern.unwrap_or_else(get_current_dir_name);
                 commands::find_workspaces(&pattern)
             }
             Some(FindCommands::Session {
                 pattern,
-                project_path,
+                workspace,
+                title_only,
+                content,
+                after,
+                before,
+                limit,
             }) => {
-                let pattern = pattern.unwrap_or_else(|| get_current_dir_name());
-                commands::find_sessions(&pattern, project_path.as_deref())
+                let pattern = pattern.unwrap_or_else(get_current_dir_name);
+                commands::find_sessions_filtered(
+                    &pattern,
+                    workspace.as_deref(),
+                    title_only,
+                    content,
+                    after.as_deref(),
+                    before.as_deref(),
+                    limit,
+                )
             }
             Some(FindCommands::Path {
                 pattern,
                 project_path,
             }) => {
-                let pattern = pattern.unwrap_or_else(|| get_current_dir_name());
-                commands::find_sessions(&pattern, project_path.as_deref())
+                let pattern = pattern.unwrap_or_else(get_current_dir_name);
+                // Use title-only search by default for path-based search (faster)
+                commands::find_sessions_filtered(&pattern, project_path.as_deref(), false, false, None, None, 50)
             }
             None => {
                 // Default to finding workspaces matching current directory

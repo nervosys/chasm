@@ -71,14 +71,11 @@ pub fn read_resource(uri: &str) -> ReadResourceResult {
         "csm://db/stats" => read_db_stats_resource(),
         _ => {
             // Try to parse dynamic URIs
-            if uri.starts_with("csm://workspace/") {
-                let hash = &uri["csm://workspace/".len()..];
+            if let Some(hash) = uri.strip_prefix("csm://workspace/") {
                 read_workspace_resource(hash)
-            } else if uri.starts_with("csm://session/") {
-                let id = &uri["csm://session/".len()..];
+            } else if let Some(id) = uri.strip_prefix("csm://session/") {
                 read_session_resource(id)
-            } else if uri.starts_with("csm://db/session/") {
-                let id = &uri["csm://db/session/".len()..];
+            } else if let Some(id) = uri.strip_prefix("csm://db/session/") {
                 read_db_session_resource(id)
             } else {
                 ReadResourceResult {

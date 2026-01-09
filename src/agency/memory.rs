@@ -846,7 +846,7 @@ impl KnowledgeBase {
     fn sentence_chunk(&self, content: &str) -> Vec<DocumentChunk> {
         // Simple sentence splitting (could be improved with NLP)
         let sentences: Vec<&str> = content
-            .split(|c| c == '.' || c == '!' || c == '?')
+            .split(['.', '!', '?'])
             .filter(|s| !s.trim().is_empty())
             .collect();
 
@@ -859,8 +859,7 @@ impl KnowledgeBase {
             let sentence = sentence.trim();
             if estimate_tokens(&current) + estimate_tokens(sentence)
                 > self.chunking_config.chunk_size
-            {
-                if !current.is_empty() {
+                && !current.is_empty() {
                     chunks.push(DocumentChunk {
                         index: idx,
                         content: current.clone(),
@@ -873,7 +872,6 @@ impl KnowledgeBase {
                     start += current.len();
                     current.clear();
                 }
-            }
             if !current.is_empty() {
                 current.push(' ');
             }

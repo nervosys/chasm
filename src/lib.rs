@@ -39,6 +39,8 @@
 // Library modules export public APIs for external use - suppress dead_code warnings
 #![allow(dead_code)]
 #![allow(unused_imports)]
+#![allow(clippy::upper_case_acronyms)] // LLM, VLM, etc. are standard AI terminology
+#![allow(clippy::type_complexity)] // Complex types in auth are necessary for the API
 
 pub mod agency;
 pub mod browser;
@@ -78,3 +80,4 @@ pub use workspace::{
     get_chat_sessions_from_workspace, get_workspace_by_hash, get_workspace_by_path,
     get_workspace_storage_path, normalize_path,
 };
+

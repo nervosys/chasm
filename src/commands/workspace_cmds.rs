@@ -165,6 +165,16 @@ pub fn list_sessions(project_path: Option<&str>) -> Result<()> {
 /// Find workspaces by search pattern
 pub fn find_workspaces(pattern: &str) -> Result<()> {
     let workspaces = discover_workspaces()?;
+
+    // Resolve "." to current directory name
+    let pattern = if pattern == "." {
+        std::env::current_dir()
+            .ok()
+            .and_then(|p| p.file_name().map(|n| n.to_string_lossy().to_string()))
+            .unwrap_or_else(|| pattern.to_string())
+    } else {
+        pattern.to_string()
+    };
     let pattern_lower = pattern.to_lowercase();
 
     let matching: Vec<&Workspace> = workspaces
@@ -320,6 +330,346 @@ pub fn find_sessions(pattern: &str, project_path: Option<&str>) -> Result<()> {
     println!("\nFound {} matching session(s)", rows.len());
 
     Ok(())
+}
+
+/// Optimized session search with filtering
+///
+/// This function is optimized for speed by:
+/// 1. Filtering workspaces first (by name/path)
+/// 2. Filtering by file modification date before reading content
+/// 3. Only parsing JSON when needed
+/// 4. Content search is opt-in (expensive)
+/// 5. Parallel file scanning with rayon
+pub fn find_sessions_filtered(
+    pattern: &str,
+    workspace_filter: Option<&str>,
+    title_only: bool,
+    search_content: bool,
+    after: Option<&str>,
+    before: Option<&str>,
+    limit: usize,
+) -> Result<()> {
+    use chrono::{NaiveDate, Utc};
+    use rayon::prelude::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    let pattern_lower = pattern.to_lowercase();
+
+    // Parse date filters upfront
+    let after_date = after.and_then(|s| NaiveDate::parse_from_str(s, "%Y-%m-%d").ok());
+    let before_date = before.and_then(|s| NaiveDate::parse_from_str(s, "%Y-%m-%d").ok());
+
+    // Get workspace storage path directly - avoid full discovery if filtering
+    let storage_path = crate::workspace::get_workspace_storage_path()?;
+    if !storage_path.exists() {
+        println!("No workspaces found");
+        return Ok(());
+    }
+
+    // Collect workspace directories with minimal I/O
+    let ws_filter_lower = workspace_filter.map(|s| s.to_lowercase());
+
+    let workspace_dirs: Vec<_> = std::fs::read_dir(&storage_path)?
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_dir())
+        .filter_map(|entry| {
+            let workspace_dir = entry.path();
+            let workspace_json_path = workspace_dir.join("workspace.json");
+
+            // Quick check: does chatSessions exist?
+            let chat_sessions_dir = workspace_dir.join("chatSessions");
+            if !chat_sessions_dir.exists() {
+                return None;
+            }
+
+            // Parse workspace.json for project path (needed for filtering)
+            let project_path =
+                std::fs::read_to_string(&workspace_json_path)
+                    .ok()
+                    .and_then(|content| {
+                        serde_json::from_str::<crate::models::WorkspaceJson>(&content)
+                            .ok()
+                            .and_then(|ws| {
+                                ws.folder
+                                    .map(|f| crate::workspace::decode_workspace_folder(&f))
+                            })
+                    });
+
+            // Apply workspace filter early
+            if let Some(ref filter) = ws_filter_lower {
+                let hash = entry.file_name().to_string_lossy().to_lowercase();
+                let path_matches = project_path
+                    .as_ref()
+                    .map(|p| p.to_lowercase().contains(filter))
+                    .unwrap_or(false);
+                if !hash.contains(filter) && !path_matches {
+                    return None;
+                }
+            }
+
+            let ws_name = project_path
+                .as_ref()
+                .and_then(|p| std::path::Path::new(p).file_name())
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_else(|| {
+                    entry.file_name().to_string_lossy()[..8.min(entry.file_name().len())]
+                        .to_string()
+                });
+
+            Some((chat_sessions_dir, ws_name))
+        })
+        .collect();
+
+    if workspace_dirs.is_empty() {
+        if let Some(ws) = workspace_filter {
+            println!("No workspaces found matching '{}'", ws);
+        } else {
+            println!("No workspaces with chat sessions found");
+        }
+        return Ok(());
+    }
+
+    // Collect all session file paths
+    let session_files: Vec<_> = workspace_dirs
+        .iter()
+        .flat_map(|(chat_dir, ws_name)| {
+            std::fs::read_dir(chat_dir)
+                .into_iter()
+                .flatten()
+                .filter_map(|e| e.ok())
+                .filter(|e| {
+                    e.path()
+                        .extension()
+                        .map(|ext| ext == "json")
+                        .unwrap_or(false)
+                })
+                .map(|e| (e.path(), ws_name.clone()))
+                .collect::<Vec<_>>()
+        })
+        .collect();
+
+    let total_files = session_files.len();
+    let scanned = AtomicUsize::new(0);
+    let skipped_by_date = AtomicUsize::new(0);
+
+    // Process files in parallel
+    let mut results: Vec<_> = session_files
+        .par_iter()
+        .filter_map(|(path, ws_name)| {
+            // Date filter using file metadata (very fast)
+            if after_date.is_some() || before_date.is_some() {
+                if let Ok(metadata) = path.metadata() {
+                    if let Ok(modified) = metadata.modified() {
+                        let file_date: chrono::DateTime<Utc> = modified.into();
+                        let file_naive = file_date.date_naive();
+
+                        if let Some(after) = after_date {
+                            if file_naive < after {
+                                skipped_by_date.fetch_add(1, Ordering::Relaxed);
+                                return None;
+                            }
+                        }
+                        if let Some(before) = before_date {
+                            if file_naive > before {
+                                skipped_by_date.fetch_add(1, Ordering::Relaxed);
+                                return None;
+                            }
+                        }
+                    }
+                }
+            }
+
+            scanned.fetch_add(1, Ordering::Relaxed);
+
+            // Read file content once
+            let content = match std::fs::read_to_string(path) {
+                Ok(c) => c,
+                Err(_) => return None,
+            };
+
+            // Extract title from content
+            let title =
+                extract_title_from_content(&content).unwrap_or_else(|| "Untitled".to_string());
+            let title_lower = title.to_lowercase();
+
+            // Check session ID from filename
+            let session_id = path
+                .file_stem()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default();
+            let id_matches =
+                !pattern_lower.is_empty() && session_id.to_lowercase().contains(&pattern_lower);
+
+            // Check title match
+            let title_matches = !pattern_lower.is_empty() && title_lower.contains(&pattern_lower);
+
+            // Content search if requested
+            let content_matches = if search_content
+                && !title_only
+                && !id_matches
+                && !title_matches
+                && !pattern_lower.is_empty()
+            {
+                content.to_lowercase().contains(&pattern_lower)
+            } else {
+                false
+            };
+
+            // Empty pattern matches everything (for listing)
+            let matches =
+                pattern_lower.is_empty() || id_matches || title_matches || content_matches;
+            if !matches {
+                return None;
+            }
+
+            let match_type = if pattern_lower.is_empty() {
+                ""
+            } else if id_matches {
+                "ID"
+            } else if title_matches {
+                "title"
+            } else {
+                "content"
+            };
+
+            // Count messages from content (already loaded)
+            let message_count = content.matches("\"message\":").count();
+
+            // Get modification time
+            let modified = path
+                .metadata()
+                .ok()
+                .and_then(|m| m.modified().ok())
+                .map(|t| {
+                    let datetime: chrono::DateTime<chrono::Utc> = t.into();
+                    datetime.format("%Y-%m-%d %H:%M").to_string()
+                })
+                .unwrap_or_else(|| "unknown".to_string());
+
+            Some((
+                title,
+                ws_name.clone(),
+                modified,
+                message_count,
+                match_type.to_string(),
+            ))
+        })
+        .collect();
+
+    let scanned_count = scanned.load(Ordering::Relaxed);
+    let skipped_count = skipped_by_date.load(Ordering::Relaxed);
+
+    if results.is_empty() {
+        println!("No sessions found matching '{}'", pattern);
+        if skipped_count > 0 {
+            println!("  ({} sessions skipped due to date filter)", skipped_count);
+        }
+        return Ok(());
+    }
+
+    // Sort by modification date (newest first)
+    results.sort_by(|a, b| b.2.cmp(&a.2));
+
+    // Apply limit
+    results.truncate(limit);
+
+    #[derive(Tabled)]
+    struct SearchResultRow {
+        #[tabled(rename = "Title")]
+        title: String,
+        #[tabled(rename = "Workspace")]
+        workspace: String,
+        #[tabled(rename = "Modified")]
+        modified: String,
+        #[tabled(rename = "Msgs")]
+        messages: usize,
+        #[tabled(rename = "Match")]
+        match_type: String,
+    }
+
+    let rows: Vec<SearchResultRow> = results
+        .into_iter()
+        .map(
+            |(title, workspace, modified, messages, match_type)| SearchResultRow {
+                title: truncate_string(&title, 40),
+                workspace: truncate_string(&workspace, 20),
+                modified,
+                messages,
+                match_type,
+            },
+        )
+        .collect();
+
+    let table = Table::new(&rows).with(Style::ascii_rounded()).to_string();
+
+    println!("{}", table);
+    println!(
+        "\nFound {} session(s) (scanned {} of {} files{})",
+        rows.len(),
+        scanned_count,
+        total_files,
+        if skipped_count > 0 {
+            format!(", {} skipped by date", skipped_count)
+        } else {
+            String::new()
+        }
+    );
+    if rows.len() >= limit {
+        println!("  (results limited to {}; use --limit to show more)", limit);
+    }
+
+    Ok(())
+}
+
+/// Extract title from full JSON content (more reliable than header-only)
+fn extract_title_from_content(content: &str) -> Option<String> {
+    // Look for "customTitle" first (user-set title)
+    if let Some(start) = content.find("\"customTitle\"") {
+        if let Some(colon) = content[start..].find(':') {
+            let after_colon = &content[start + colon + 1..];
+            let trimmed = after_colon.trim_start();
+            if trimmed.starts_with('"') {
+                if let Some(end) = trimmed[1..].find('"') {
+                    let title = &trimmed[1..end + 1];
+                    if !title.is_empty() && title != "null" {
+                        return Some(title.to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    // Fall back to first request's message text
+    if let Some(start) = content.find("\"text\"") {
+        if let Some(colon) = content[start..].find(':') {
+            let after_colon = &content[start + colon + 1..];
+            let trimmed = after_colon.trim_start();
+            if trimmed.starts_with('"') {
+                if let Some(end) = trimmed[1..].find('"') {
+                    let title = &trimmed[1..end + 1];
+                    if !title.is_empty() && title.len() < 100 {
+                        return Some(title.to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
+
+/// Fast title extraction from JSON header
+fn extract_title_fast(header: &str) -> Option<String> {
+    extract_title_from_content(header)
+}
+
+/// Truncate string to max length with ellipsis
+fn truncate_string(s: &str, max_len: usize) -> String {
+    if s.len() <= max_len {
+        s.to_string()
+    } else {
+        format!("{}...", &s[..max_len.saturating_sub(3)])
+    }
 }
 
 /// Show workspace details

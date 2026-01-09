@@ -225,9 +225,29 @@ pub enum FindCommands {
         /// Text pattern to match (case-insensitive, defaults to current directory name)
         pattern: Option<String>,
 
-        /// Filter by project path
+        /// Filter by project path or workspace name
+        #[arg(long, short = 'w')]
+        workspace: Option<String>,
+
+        /// Only search in session titles (faster, skip content search)
+        #[arg(long, short = 't')]
+        title_only: bool,
+
+        /// Include message content in search (slower)
+        #[arg(long, short = 'c')]
+        content: bool,
+
+        /// Filter sessions modified after this date (YYYY-MM-DD)
         #[arg(long)]
-        project_path: Option<String>,
+        after: Option<String>,
+
+        /// Filter sessions modified before this date (YYYY-MM-DD)
+        #[arg(long)]
+        before: Option<String>,
+
+        /// Limit number of results
+        #[arg(long, short = 'n', default_value = "50")]
+        limit: usize,
     },
 
     /// Search sessions within a specific project path

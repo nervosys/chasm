@@ -2056,8 +2056,8 @@ fn generate_unified_diff(old: &str, new: &str, file_path: &str) -> String {
 fn harvest_web_providers(
     conn: &Connection,
     stats: &mut HarvestStats,
-    include_providers: &Vec<String>,
-    exclude_providers: &Vec<String>,
+    include_providers: &[String],
+    exclude_providers: &[String],
 ) -> Result<()> {
     use crate::browser::extract_provider_cookies;
 
@@ -3311,3 +3311,4 @@ fn md5_hash(data: &str) -> u128 {
     }
     hash
 }
+

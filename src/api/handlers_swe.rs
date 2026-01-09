@@ -1394,7 +1394,7 @@ fn get_git_remote(path: &str) -> Option<String> {
         .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
 }
 
-fn detect_project_type(path: &PathBuf) -> (Option<String>, Option<String>) {
+fn detect_project_type(path: &std::path::Path) -> (Option<String>, Option<String>) {
     let mut language = None;
     let mut framework = None;
 
@@ -1429,7 +1429,7 @@ fn detect_project_type(path: &PathBuf) -> (Option<String>, Option<String>) {
     (language, framework)
 }
 
-fn resolve_path(base: &PathBuf, relative: &str) -> PathBuf {
+fn resolve_path(base: &std::path::Path, relative: &str) -> PathBuf {
     let path = PathBuf::from(relative);
     if path.is_absolute() {
         path
@@ -1437,3 +1437,4 @@ fn resolve_path(base: &PathBuf, relative: &str) -> PathBuf {
         base.join(relative)
     }
 }
+

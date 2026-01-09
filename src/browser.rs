@@ -14,7 +14,6 @@ use std::path::PathBuf;
 
 // Suppress dead code warnings for fields used in debugging
 #[allow(dead_code)]
-
 /// Supported browser types for cookie extraction
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BrowserType {
@@ -67,7 +66,7 @@ impl BrowserType {
                             if cookies_path.exists() {
                                 if let Ok(metadata) = fs::metadata(&cookies_path) {
                                     let size = metadata.len();
-                                    if best_profile.as_ref().is_none_or(|(_, s)| size > *s) {
+                                    if best_profile.as_ref().map_or(true, |(_, s)| size > *s) {
                                         best_profile = Some((profile_path, size));
                                     }
                                 }
@@ -704,12 +703,10 @@ pub fn extract_provider_cookies(provider_name: &str) -> Option<ProviderCredentia
                                 .auth_cookie_names
                                 .iter()
                                 .any(|name| cookie.name.contains(name))
-                            {
-                                if cookie.name.contains("session") || cookie.name.contains("token")
+                                && (cookie.name.contains("session") || cookie.name.contains("token"))
                                 {
                                     creds.session_token = Some(cookie.value.clone());
                                 }
-                            }
                             creds
                                 .cookies
                                 .insert(cookie.name.clone(), cookie.value.clone());
@@ -902,7 +899,7 @@ fn decrypt_chromium_cookie(encrypted_value: &[u8], browser: &BrowserType) -> Res
 
     // Try DPAPI decryption (older format)
     unsafe {
-        let mut input = CRYPT_INTEGER_BLOB {
+        let input = CRYPT_INTEGER_BLOB {
             cbData: encrypted_value.len() as u32,
             pbData: encrypted_value.as_ptr() as *mut u8,
         };
@@ -911,7 +908,7 @@ fn decrypt_chromium_cookie(encrypted_value: &[u8], browser: &BrowserType) -> Res
             pbData: std::ptr::null_mut(),
         };
 
-        let result = CryptUnprotectData(&mut input, None, None, None, None, 0, &mut output);
+        let result = CryptUnprotectData(&input, None, None, None, None, 0, &mut output);
 
         if result.is_ok() && !output.pbData.is_null() {
             let slice = std::slice::from_raw_parts(output.pbData, output.cbData as usize);
@@ -950,7 +947,7 @@ fn get_chromium_encryption_key(browser: &BrowserType) -> Option<Vec<u8>> {
 
     // Decrypt using DPAPI
     unsafe {
-        let mut input = CRYPT_INTEGER_BLOB {
+        let input = CRYPT_INTEGER_BLOB {
             cbData: encrypted_key.len() as u32,
             pbData: encrypted_key.as_ptr() as *mut u8,
         };
@@ -959,7 +956,7 @@ fn get_chromium_encryption_key(browser: &BrowserType) -> Option<Vec<u8>> {
             pbData: std::ptr::null_mut(),
         };
 
-        let result = CryptUnprotectData(&mut input, None, None, None, None, 0, &mut output);
+        let result = CryptUnprotectData(&input, None, None, None, None, 0, &mut output);
 
         if result.is_ok() && !output.pbData.is_null() {
             let key = std::slice::from_raw_parts(output.pbData, output.cbData as usize).to_vec();
@@ -1080,3 +1077,6 @@ mod tests {
         assert_eq!(summary.total_providers_authenticated, 0);
     }
 }
+
+
+

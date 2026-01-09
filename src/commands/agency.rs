@@ -92,58 +92,51 @@ pub fn show_agent_info(name: &str) -> Result<()> {
         "assistant" => {
             println!("  {} {}", "Role:".dimmed(), "custom".green());
             println!(
-                "  {} {}",
-                "Description:".dimmed(),
-                "General-purpose AI assistant with planning and reflection"
+                "  {} General-purpose AI assistant with planning and reflection",
+                "Description:".dimmed()
             );
-            println!("  {} {}", "Model:".dimmed(), "gemini-2.0-flash (default)");
-            println!("  {} {}", "Temperature:".dimmed(), "0.7");
+            println!("  {} gemini-2.0-flash (default)", "Model:".dimmed());
+            println!("  {} 0.7", "Temperature:".dimmed());
             println!(
-                "  {} {}",
-                "Capabilities:".dimmed(),
-                "planning, reflection, code_execution"
+                "  {} planning, reflection, code_execution",
+                "Capabilities:".dimmed()
             );
         }
         "researcher" => {
             println!("  {} {}", "Role:".dimmed(), "researcher".green());
             println!(
-                "  {} {}",
-                "Description:".dimmed(),
-                "Research specialist with web search capabilities"
+                "  {} Research specialist with web search capabilities",
+                "Description:".dimmed()
             );
-            println!("  {} {}", "Model:".dimmed(), "gemini-2.0-flash (default)");
-            println!("  {} {}", "Temperature:".dimmed(), "0.5");
+            println!("  {} gemini-2.0-flash (default)", "Model:".dimmed());
+            println!("  {} 0.5", "Temperature:".dimmed());
             println!(
-                "  {} {}",
-                "Tools:".dimmed(),
-                "web_search, file_read, knowledge_base"
+                "  {} web_search, file_read, knowledge_base",
+                "Tools:".dimmed()
             );
         }
         "coder" => {
             println!("  {} {}", "Role:".dimmed(), "coder".green());
             println!(
-                "  {} {}",
-                "Description:".dimmed(),
-                "Code generation and modification specialist"
+                "  {} Code generation and modification specialist",
+                "Description:".dimmed()
             );
-            println!("  {} {}", "Model:".dimmed(), "gemini-2.0-flash (default)");
-            println!("  {} {}", "Temperature:".dimmed(), "0.3");
+            println!("  {} gemini-2.0-flash (default)", "Model:".dimmed());
+            println!("  {} 0.3", "Temperature:".dimmed());
             println!(
-                "  {} {}",
-                "Tools:".dimmed(),
-                "file_read, file_write, terminal, code_search"
+                "  {} file_read, file_write, terminal, code_search",
+                "Tools:".dimmed()
             );
         }
         "reviewer" => {
             println!("  {} {}", "Role:".dimmed(), "reviewer".green());
             println!(
-                "  {} {}",
-                "Description:".dimmed(),
-                "Code review and quality assurance"
+                "  {} Code review and quality assurance",
+                "Description:".dimmed()
             );
-            println!("  {} {}", "Model:".dimmed(), "gemini-2.0-flash (default)");
-            println!("  {} {}", "Temperature:".dimmed(), "0.2");
-            println!("  {} {}", "Tools:".dimmed(), "file_read, code_search, lint");
+            println!("  {} gemini-2.0-flash (default)", "Model:".dimmed());
+            println!("  {} 0.2", "Temperature:".dimmed());
+            println!("  {} file_read, code_search, lint", "Tools:".dimmed());
         }
         _ => {
             println!(

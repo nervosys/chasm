@@ -87,6 +87,109 @@ pub fn add_session_to_index(
     write_chat_session_index(db_path, &index)
 }
 
+/// Remove a session from the VS Code index
+pub fn remove_session_from_index(db_path: &Path, session_id: &str) -> Result<bool> {
+    let mut index = read_chat_session_index(db_path)?;
+    let removed = index.entries.remove(session_id).is_some();
+    if removed {
+        write_chat_session_index(db_path, &index)?;
+    }
+    Ok(removed)
+}
+
+/// Sync the VS Code index with sessions on disk (remove stale entries, add missing ones)
+pub fn sync_session_index(
+    workspace_id: &str,
+    chat_sessions_dir: &Path,
+    force: bool,
+) -> Result<(usize, usize)> {
+    let db_path = get_workspace_storage_db(workspace_id)?;
+
+    if !db_path.exists() {
+        return Err(CsmError::WorkspaceNotFound(format!(
+            "Database not found: {}",
+            db_path.display()
+        )));
+    }
+
+    // Check if VS Code is running
+    if !force && is_vscode_running() {
+        return Err(CsmError::VSCodeRunning);
+    }
+
+    // Get current index
+    let mut index = read_chat_session_index(&db_path)?;
+
+    // Get session files on disk
+    let mut files_on_disk: std::collections::HashSet<String> = std::collections::HashSet::new();
+    if chat_sessions_dir.exists() {
+        for entry in std::fs::read_dir(chat_sessions_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.extension().map(|e| e == "json").unwrap_or(false) {
+                if let Some(stem) = path.file_stem() {
+                    files_on_disk.insert(stem.to_string_lossy().to_string());
+                }
+            }
+        }
+    }
+
+    // Remove stale entries (in index but not on disk)
+    let stale_ids: Vec<String> = index
+        .entries
+        .keys()
+        .filter(|id| !files_on_disk.contains(*id))
+        .cloned()
+        .collect();
+
+    let removed = stale_ids.len();
+    for id in &stale_ids {
+        index.entries.remove(id);
+    }
+
+    // Add/update sessions from disk
+    let mut added = 0;
+    for entry in std::fs::read_dir(chat_sessions_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+
+        if path.extension().map(|e| e == "json").unwrap_or(false) {
+            if let Ok(content) = std::fs::read_to_string(&path) {
+                if let Ok(session) = serde_json::from_str::<ChatSession>(&content) {
+                    let session_id = session.session_id.clone().unwrap_or_else(|| {
+                        path.file_stem()
+                            .map(|s| s.to_string_lossy().to_string())
+                            .unwrap_or_else(|| uuid::Uuid::new_v4().to_string())
+                    });
+
+                    let title = session.title();
+                    let is_empty = session.is_empty();
+                    let last_message_date = session.last_message_date;
+                    let initial_location = session.initial_location.clone();
+
+                    index.entries.insert(
+                        session_id.clone(),
+                        ChatSessionIndexEntry {
+                            session_id,
+                            title,
+                            last_message_date,
+                            is_imported: session.is_imported,
+                            initial_location,
+                            is_empty,
+                        },
+                    );
+                    added += 1;
+                }
+            }
+        }
+    }
+
+    // Write the synced index
+    write_chat_session_index(&db_path, &index)?;
+
+    Ok((added, removed))
+}
+
 /// Register all sessions from a directory into the VS Code index
 pub fn register_all_sessions_from_directory(
     workspace_id: &str,
@@ -107,8 +210,10 @@ pub fn register_all_sessions_from_directory(
         return Err(CsmError::VSCodeRunning);
     }
 
-    let mut registered = 0;
+    // Use sync to ensure index matches disk
+    let (added, removed) = sync_session_index(workspace_id, chat_sessions_dir, force)?;
 
+    // Print individual session info
     for entry in std::fs::read_dir(chat_sessions_dir)? {
         let entry = entry?;
         let path = entry.path();
@@ -116,7 +221,6 @@ pub fn register_all_sessions_from_directory(
         if path.extension().map(|e| e == "json").unwrap_or(false) {
             if let Ok(content) = std::fs::read_to_string(&path) {
                 if let Ok(session) = serde_json::from_str::<ChatSession>(&content) {
-                    // Get session ID from the file - use filename (without .json) as ID
                     let session_id = session.session_id.clone().unwrap_or_else(|| {
                         path.file_stem()
                             .map(|s| s.to_string_lossy().to_string())
@@ -124,32 +228,22 @@ pub fn register_all_sessions_from_directory(
                     });
 
                     let title = session.title();
-                    let is_empty = session.is_empty();
-                    let last_message_date = session.last_message_date;
-                    let initial_location = session.initial_location.clone();
-
-                    add_session_to_index(
-                        &db_path,
-                        &session_id,
-                        &title,
-                        last_message_date,
-                        session.is_imported,
-                        &initial_location,
-                        is_empty,
-                    )?;
 
                     println!(
                         "[OK] Registered: {} ({}...)",
                         title,
                         &session_id[..12.min(session_id.len())]
                     );
-                    registered += 1;
                 }
             }
         }
     }
 
-    Ok(registered)
+    if removed > 0 {
+        println!("[OK] Removed {} stale index entries", removed);
+    }
+
+    Ok(added)
 }
 
 /// Check if VS Code is currently running

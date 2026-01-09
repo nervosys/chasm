@@ -92,8 +92,7 @@ fn derive_workspace_name(workspace_id: &str) -> String {
     workspace_id
         .replace('\\', "/")
         .split('/')
-        .filter(|s| !s.is_empty())
-        .last()
+        .rfind(|s: &&str| !s.is_empty())
         .unwrap_or(workspace_id)
         .to_string()
 }
@@ -2486,3 +2485,4 @@ pub async fn get_provider_health() -> impl Responder {
         }
     ]))
 }
+
