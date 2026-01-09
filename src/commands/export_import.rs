@@ -6,6 +6,7 @@ use anyhow::{Context, Result};
 use colored::*;
 use std::path::Path;
 
+use crate::models::Workspace;
 use crate::workspace::{get_workspace_by_hash, get_workspace_by_path};
 
 /// Export chat sessions from a workspace
@@ -109,7 +110,7 @@ pub fn import_sessions(
     Ok(())
 }
 
-/// Move chat sessions from one workspace to another
+/// Move chat sessions from one workspace to another (by path lookup)
 pub fn move_sessions(source_hash: &str, target_path: &str) -> Result<()> {
     let source_ws = get_workspace_by_hash(source_hash)?
         .context(format!("Source workspace not found: {}", source_hash))?;
@@ -119,8 +120,44 @@ pub fn move_sessions(source_hash: &str, target_path: &str) -> Result<()> {
         target_path
     ))?;
 
+    // Prevent moving to self
+    if source_ws.workspace_path == target_ws.workspace_path {
+        println!(
+            "{} Source and target are the same workspace",
+            "[!]".yellow()
+        );
+        return Ok(());
+    }
+
+    move_sessions_internal(&source_ws, &target_ws, target_path)
+}
+
+/// Move chat sessions from one workspace to another (with explicit target workspace)
+fn move_sessions_to_workspace(source_ws: &Workspace, target_ws: &Workspace) -> Result<()> {
+    let target_path: &str = target_ws
+        .project_path
+        .as_deref()
+        .unwrap_or("target workspace");
+    move_sessions_internal(source_ws, target_ws, target_path)
+}
+
+/// Internal function to move sessions between workspaces
+fn move_sessions_internal(
+    source_ws: &Workspace,
+    target_ws: &Workspace,
+    display_path: &str,
+) -> Result<()> {
     if !source_ws.has_chat_sessions {
         println!("No chat sessions to move.");
+        return Ok(());
+    }
+
+    // Prevent moving to self
+    if source_ws.workspace_path == target_ws.workspace_path {
+        println!(
+            "{} Source and target are the same workspace",
+            "[!]".yellow()
+        );
         return Ok(());
     }
 
@@ -129,12 +166,20 @@ pub fn move_sessions(source_hash: &str, target_path: &str) -> Result<()> {
 
     // Move all session files
     let mut moved_count = 0;
+    let mut skipped_count = 0;
     for entry in std::fs::read_dir(&source_ws.chat_sessions_path)? {
         let entry = entry?;
         let src_file = entry.path();
 
         if src_file.extension().map(|e| e == "json").unwrap_or(false) {
             let dest_file = target_ws.chat_sessions_path.join(entry.file_name());
+
+            // Skip if file already exists with same name (don't overwrite)
+            if dest_file.exists() {
+                skipped_count += 1;
+                continue;
+            }
+
             std::fs::rename(&src_file, &dest_file)?;
             moved_count += 1;
         }
@@ -144,8 +189,16 @@ pub fn move_sessions(source_hash: &str, target_path: &str) -> Result<()> {
         "{} Moved {} chat session(s) to {}",
         "[OK]".green(),
         moved_count,
-        target_path
+        display_path
     );
+
+    if skipped_count > 0 {
+        println!(
+            "{} Skipped {} session(s) that already exist in target",
+            "[!]".yellow(),
+            skipped_count
+        );
+    }
 
     Ok(())
 }
@@ -301,18 +354,17 @@ pub fn import_specific_sessions(
 
 /// Move all sessions from one workspace to another (by hash)
 pub fn move_workspace(source_hash: &str, target: &str) -> Result<()> {
-    // Try target as path first, then as hash
-    let target_ws = get_workspace_by_path(target)?
-        .or_else(|| get_workspace_by_hash(target).ok().flatten())
+    // Get source workspace
+    let source_ws = get_workspace_by_hash(source_hash)?
+        .context(format!("Source workspace not found: {}", source_hash))?;
+
+    // Try target as hash first, then as path
+    // This prevents ambiguity when multiple workspaces share the same path
+    let target_ws = get_workspace_by_hash(target)?
+        .or_else(|| get_workspace_by_path(target).ok().flatten())
         .context(format!("Target workspace not found: {}", target))?;
 
-    move_sessions(
-        source_hash,
-        target_ws
-            .project_path
-            .as_ref()
-            .unwrap_or(&target.to_string()),
-    )
+    move_sessions_to_workspace(&source_ws, &target_ws)
 }
 
 /// Move specific sessions by ID
