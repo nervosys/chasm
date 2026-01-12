@@ -1437,4 +1437,3 @@ fn resolve_path(base: &std::path::Path, relative: &str) -> PathBuf {
         base.join(relative)
     }
 }
-

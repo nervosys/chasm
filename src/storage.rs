@@ -13,11 +13,61 @@ use sysinfo::System;
 /// Sanitize JSON content by replacing lone surrogates with replacement character.
 /// VS Code sometimes writes invalid JSON with lone Unicode surrogates (e.g., \udde0).
 fn sanitize_json_unicode(content: &str) -> String {
-    // Match lone high surrogates (D800-DBFF) not followed by low surrogate (DC00-DFFF)
-    // and lone low surrogates (DC00-DFFF) not preceded by high surrogate
-    let re = Regex::new(r"\\u[dD][89aAbB][0-9a-fA-F]{2}(?!\\u[dD][cCdDeEfF][0-9a-fA-F]{2})|(?<!\\u[dD][89aAbB][0-9a-fA-F]{2})\\u[dD][cCdDeEfF][0-9a-fA-F]{2}")
-        .unwrap();
-    re.replace_all(content, "\\uFFFD").to_string()
+    // Rust regex doesn't support lookahead/lookbehind, so we collect all Unicode escapes
+    // and check if they form valid surrogate pairs
+    let re = Regex::new(r"\\u[0-9a-fA-F]{4}").unwrap();
+    let mut result = content.to_string();
+
+    // Collect all matches with their positions
+    let matches: Vec<_> = re
+        .find_iter(content)
+        .map(|m| (m.start(), m.end(), m.as_str().to_string()))
+        .collect();
+
+    // Process in reverse to maintain correct positions
+    for i in (0..matches.len()).rev() {
+        let (start, end, escape) = &matches[i];
+        let hex = &escape[2..];
+        if let Ok(code) = u16::from_str_radix(hex, 16) {
+            // Check if it's a high surrogate (D800-DBFF)
+            if (0xD800..=0xDBFF).contains(&code) {
+                // Check if followed by low surrogate
+                let has_low = matches
+                    .get(i + 1)
+                    .is_some_and(|(next_start, _, next_escape)| {
+                        *next_start == *end && {
+                            let next_hex = &next_escape[2..];
+                            u16::from_str_radix(next_hex, 16)
+                                .map(|c| (0xDC00..=0xDFFF).contains(&c))
+                                .unwrap_or(false)
+                        }
+                    });
+                if !has_low {
+                    result.replace_range(*start..*end, r"\uFFFD");
+                }
+            }
+            // Check if it's a low surrogate (DC00-DFFF)
+            else if (0xDC00..=0xDFFF).contains(&code) {
+                // Check if preceded by high surrogate
+                let has_high = i > 0
+                    && matches
+                        .get(i - 1)
+                        .is_some_and(|(_, prev_end, prev_escape)| {
+                            *prev_end == *start && {
+                                let prev_hex = &prev_escape[2..];
+                                u16::from_str_radix(prev_hex, 16)
+                                    .map(|c| (0xD800..=0xDBFF).contains(&c))
+                                    .unwrap_or(false)
+                            }
+                        });
+                if !has_high {
+                    result.replace_range(*start..*end, r"\uFFFD");
+                }
+            }
+        }
+    }
+
+    result
 }
 
 /// Try to parse JSON, sanitizing invalid Unicode if needed
@@ -115,6 +165,7 @@ pub fn add_session_to_index(
 }
 
 /// Remove a session from the VS Code index
+#[allow(dead_code)]
 pub fn remove_session_from_index(db_path: &Path, session_id: &str) -> Result<bool> {
     let mut index = read_chat_session_index(db_path)?;
     let removed = index.entries.remove(session_id).is_some();

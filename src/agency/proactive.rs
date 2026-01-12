@@ -42,7 +42,6 @@ pub enum PermissionLevel {
     HighAutonomy,
 }
 
-
 impl PermissionLevel {
     /// Actions that can be auto-approved at this level
     pub fn auto_approve_actions(&self) -> Vec<&'static str> {

@@ -75,7 +75,6 @@ pub enum NodeStatus {
     Unknown,
 }
 
-
 /// Hardware information for a node
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HardwareInfo {
@@ -186,7 +185,6 @@ pub enum TaskPriority {
     High = 2,
     Critical = 3,
 }
-
 
 /// Task result
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -315,7 +313,7 @@ pub enum RemoteEvent {
     },
 
     /// Task was created/queued
-    TaskCreated(RemoteTask),
+    TaskCreated(Box<RemoteTask>),
     /// Task started running
     TaskStarted {
         task_id: RemoteTaskId,
@@ -522,7 +520,7 @@ impl RemoteMonitor {
         let mut tasks = self.tasks.write().await;
         tasks.insert(task_id.clone(), task.clone());
 
-        let _ = self.event_tx.send(RemoteEvent::TaskCreated(task));
+        let _ = self.event_tx.send(RemoteEvent::TaskCreated(Box::new(task)));
         Ok(task_id)
     }
 

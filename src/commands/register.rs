@@ -30,7 +30,6 @@ fn resolve_path(path: Option<&str>) -> PathBuf {
     }
 }
 
-
 /// Register all sessions from a workspace into VS Code's index
 pub fn register_all(project_path: Option<&str>, merge: bool, force: bool) -> Result<()> {
     let path = resolve_path(project_path);

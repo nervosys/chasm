@@ -564,7 +564,9 @@ mod provider_registry_cloud_tests {
 // ============================================================================
 
 mod m365_copilot_export_tests {
-    use chasm_cli::providers::cloud::m365copilot::{get_friendly_app_name, parse_m365_copilot_export};
+    use chasm_cli::providers::cloud::m365copilot::{
+        get_friendly_app_name, parse_m365_copilot_export,
+    };
 
     #[test]
     fn test_parse_empty_array() {

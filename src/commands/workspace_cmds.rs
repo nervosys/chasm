@@ -235,6 +235,7 @@ pub fn find_workspaces(pattern: &str) -> Result<()> {
 }
 
 /// Find sessions by search pattern
+#[allow(dead_code)]
 pub fn find_sessions(pattern: &str, project_path: Option<&str>) -> Result<()> {
     let workspaces = discover_workspaces()?;
     let pattern_lower = pattern.to_lowercase();
@@ -628,9 +629,9 @@ fn extract_title_from_content(content: &str) -> Option<String> {
         if let Some(colon) = content[start..].find(':') {
             let after_colon = &content[start + colon + 1..];
             let trimmed = after_colon.trim_start();
-            if trimmed.starts_with('"') {
-                if let Some(end) = trimmed[1..].find('"') {
-                    let title = &trimmed[1..end + 1];
+            if let Some(stripped) = trimmed.strip_prefix('"') {
+                if let Some(end) = stripped.find('"') {
+                    let title = &stripped[..end];
                     if !title.is_empty() && title != "null" {
                         return Some(title.to_string());
                     }
@@ -644,9 +645,9 @@ fn extract_title_from_content(content: &str) -> Option<String> {
         if let Some(colon) = content[start..].find(':') {
             let after_colon = &content[start + colon + 1..];
             let trimmed = after_colon.trim_start();
-            if trimmed.starts_with('"') {
-                if let Some(end) = trimmed[1..].find('"') {
-                    let title = &trimmed[1..end + 1];
+            if let Some(stripped) = trimmed.strip_prefix('"') {
+                if let Some(end) = stripped.find('"') {
+                    let title = &stripped[..end];
                     if !title.is_empty() && title.len() < 100 {
                         return Some(title.to_string());
                     }
@@ -659,6 +660,7 @@ fn extract_title_from_content(content: &str) -> Option<String> {
 }
 
 /// Fast title extraction from JSON header
+#[allow(dead_code)]
 fn extract_title_fast(header: &str) -> Option<String> {
     extract_title_from_content(header)
 }

@@ -66,7 +66,7 @@ impl BrowserType {
                             if cookies_path.exists() {
                                 if let Ok(metadata) = fs::metadata(&cookies_path) {
                                     let size = metadata.len();
-                                    if best_profile.as_ref().map_or(true, |(_, s)| size > *s) {
+                                    if best_profile.as_ref().is_none_or(|(_, s)| size > *s) {
                                         best_profile = Some((profile_path, size));
                                     }
                                 }
@@ -703,10 +703,11 @@ pub fn extract_provider_cookies(provider_name: &str) -> Option<ProviderCredentia
                                 .auth_cookie_names
                                 .iter()
                                 .any(|name| cookie.name.contains(name))
-                                && (cookie.name.contains("session") || cookie.name.contains("token"))
-                                {
-                                    creds.session_token = Some(cookie.value.clone());
-                                }
+                                && (cookie.name.contains("session")
+                                    || cookie.name.contains("token"))
+                            {
+                                creds.session_token = Some(cookie.value.clone());
+                            }
                             creds
                                 .cookies
                                 .insert(cookie.name.clone(), cookie.value.clone());
@@ -1077,6 +1078,3 @@ mod tests {
         assert_eq!(summary.total_providers_authenticated, 0);
     }
 }
-
-
-

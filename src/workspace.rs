@@ -3,7 +3,7 @@
 //! Workspace discovery and management
 
 use crate::error::{CsmError, Result};
-use crate::models::{ChatSession, SessionWithPath, Workspace, WorkspaceJson};
+use crate::models::{SessionWithPath, Workspace, WorkspaceJson};
 use crate::storage::parse_session_json;
 use std::path::{Path, PathBuf};
 use urlencoding::decode;

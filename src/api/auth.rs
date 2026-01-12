@@ -26,7 +26,9 @@ use once_cell::sync::Lazy;
 static JWT_SECRET: Lazy<Vec<u8>> = Lazy::new(|| {
     std::env::var("CSM_JWT_SECRET")
         .unwrap_or_else(|_| {
-            eprintln!("[WARN] CSM_JWT_SECRET not set, using insecure default. Set this in production!");
+            eprintln!(
+                "[WARN] CSM_JWT_SECRET not set, using insecure default. Set this in production!"
+            );
             "csm_dev_jwt_secret_change_me".to_string()
         })
         .into_bytes()
@@ -50,7 +52,6 @@ pub enum SubscriptionTier {
     /// Enterprise tier - team features, admin controls, SLA
     Enterprise,
 }
-
 
 impl SubscriptionTier {
     pub fn as_str(&self) -> &'static str {
@@ -1255,6 +1256,3 @@ pub fn configure_auth_routes(cfg: &mut web::ServiceConfig) {
             ),
     );
 }
-
-
-

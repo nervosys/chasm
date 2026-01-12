@@ -2485,4 +2485,3 @@ pub async fn get_provider_health() -> impl Responder {
         }
     ]))
 }
-

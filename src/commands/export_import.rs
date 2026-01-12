@@ -111,6 +111,7 @@ pub fn import_sessions(
 }
 
 /// Move chat sessions from one workspace to another (by path lookup)
+#[allow(dead_code)]
 pub fn move_sessions(source_hash: &str, target_path: &str) -> Result<()> {
     let source_ws = get_workspace_by_hash(source_hash)?
         .context(format!("Source workspace not found: {}", source_hash))?;

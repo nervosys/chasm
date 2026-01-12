@@ -90,7 +90,15 @@ fn main() -> Result<()> {
             }) => {
                 let pattern = pattern.unwrap_or_else(get_current_dir_name);
                 // Use title-only search by default for path-based search (faster)
-                commands::find_sessions_filtered(&pattern, project_path.as_deref(), false, false, None, None, 50)
+                commands::find_sessions_filtered(
+                    &pattern,
+                    project_path.as_deref(),
+                    false,
+                    false,
+                    None,
+                    None,
+                    50,
+                )
             }
             None => {
                 // Default to finding workspaces matching current directory

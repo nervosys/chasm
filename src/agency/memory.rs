@@ -859,19 +859,20 @@ impl KnowledgeBase {
             let sentence = sentence.trim();
             if estimate_tokens(&current) + estimate_tokens(sentence)
                 > self.chunking_config.chunk_size
-                && !current.is_empty() {
-                    chunks.push(DocumentChunk {
-                        index: idx,
-                        content: current.clone(),
-                        start_pos: start,
-                        end_pos: start + current.len(),
-                        embedding: None,
-                        token_count: estimate_tokens(&current) as u32,
-                    });
-                    idx += 1;
-                    start += current.len();
-                    current.clear();
-                }
+                && !current.is_empty()
+            {
+                chunks.push(DocumentChunk {
+                    index: idx,
+                    content: current.clone(),
+                    start_pos: start,
+                    end_pos: start + current.len(),
+                    embedding: None,
+                    token_count: estimate_tokens(&current) as u32,
+                });
+                idx += 1;
+                start += current.len();
+                current.clear();
+            }
             if !current.is_empty() {
                 current.push(' ');
             }

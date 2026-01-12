@@ -4,7 +4,7 @@
 
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Style, Stylize},
+    style::{Color, Style},
     text::{Line, Span, Text},
     widgets::{
         Block, Borders, Cell, Clear, List, ListItem, Paragraph, Row, Scrollbar,
