@@ -49,10 +49,7 @@ pub fn run_tui() -> Result<()> {
 }
 
 /// Main application loop
-fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()>
-where
-    B::Error: Send + Sync + 'static,
-{
+fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> {
     // Initial draw
     terminal.draw(|f| ui::render(f, app))?;
 

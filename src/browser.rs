@@ -66,7 +66,7 @@ impl BrowserType {
                             if cookies_path.exists() {
                                 if let Ok(metadata) = fs::metadata(&cookies_path) {
                                     let size = metadata.len();
-                                    if best_profile.as_ref().is_none_or(|(_, s)| size > *s) {
+                                    if best_profile.as_ref().map_or(true, |(_, s)| size > *s) {
                                         best_profile = Some((profile_path, size));
                                     }
                                 }
