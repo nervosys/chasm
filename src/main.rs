@@ -56,6 +56,7 @@ fn main() -> Result<()> {
             Some(ListCommands::Providers { with_sessions }) => {
                 commands::detect_providers(with_sessions)
             }
+            Some(ListCommands::Models { provider }) => commands::list_models(provider.as_deref()),
             None => commands::list_workspaces(), // Default to workspaces
         },
 

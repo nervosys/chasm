@@ -221,6 +221,14 @@ pub enum ListCommands {
         #[arg(long)]
         with_sessions: bool,
     },
+
+    /// List available models from LLM providers
+    #[command(visible_alias = "m")]
+    Models {
+        /// Filter by provider name (e.g., "ollama", "lmstudio")
+        #[arg(long, short)]
+        provider: Option<String>,
+    },
 }
 
 // ============================================================================

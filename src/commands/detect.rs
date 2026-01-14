@@ -450,3 +450,109 @@ fn truncate(s: &str, max_len: usize) -> String {
         format!("{}...", &s[..max_len - 3])
     }
 }
+
+/// List available models from all providers
+pub fn list_models(provider_filter: Option<&str>) -> Result<()> {
+    use tabled::{settings::Style, Table, Tabled};
+
+    println!("\n{} Listing Available Models", "[M]".blue().bold());
+    println!("{}", "=".repeat(60));
+
+    #[derive(Tabled)]
+    struct ModelRow {
+        #[tabled(rename = "Provider")]
+        provider: String,
+        #[tabled(rename = "Model")]
+        model: String,
+        #[tabled(rename = "Status")]
+        status: String,
+    }
+
+    let registry = ProviderRegistry::new();
+    let mut rows: Vec<ModelRow> = Vec::new();
+
+    let all_provider_types = vec![
+        ProviderType::Ollama,
+        ProviderType::Vllm,
+        ProviderType::Foundry,
+        ProviderType::LmStudio,
+        ProviderType::LocalAI,
+        ProviderType::TextGenWebUI,
+        ProviderType::Jan,
+        ProviderType::Gpt4All,
+        ProviderType::Llamafile,
+    ];
+
+    for provider_type in all_provider_types {
+        let provider_name = format!("{:?}", provider_type).to_lowercase();
+
+        // Filter by provider if specified
+        if let Some(filter) = provider_filter {
+            if !provider_name.contains(&filter.to_lowercase()) {
+                continue;
+            }
+        }
+
+        if let Some(provider) = registry.get_provider(provider_type) {
+            if provider.is_available() {
+                match provider.list_models() {
+                    Ok(models) if !models.is_empty() => {
+                        for model in models {
+                            rows.push(ModelRow {
+                                provider: format!("{}", provider_name.cyan()),
+                                model: model.clone(),
+                                status: format!("{}", "available".green()),
+                            });
+                        }
+                    }
+                    Ok(_) => {
+                        // Provider available but no models listed
+                        rows.push(ModelRow {
+                            provider: format!("{}", provider_name.cyan()),
+                            model: "(query endpoint for models)".to_string(),
+                            status: format!("{}", "online".green()),
+                        });
+                    }
+                    Err(_) => {
+                        rows.push(ModelRow {
+                            provider: format!("{}", provider_name.yellow()),
+                            model: "(error fetching models)".to_string(),
+                            status: format!("{}", "error".red()),
+                        });
+                    }
+                }
+            } else if provider_filter.is_some() {
+                // Only show offline providers if specifically filtered
+                rows.push(ModelRow {
+                    provider: format!("{}", provider_name.dimmed()),
+                    model: "(not running)".to_string(),
+                    status: format!("{}", "offline".dimmed()),
+                });
+            }
+        }
+    }
+
+    if rows.is_empty() {
+        println!("{} No models found", "[!]".yellow());
+        println!(
+            "   Start a local LLM provider (Ollama, LM Studio, etc.) to see available models."
+        );
+        return Ok(());
+    }
+
+    let table = Table::new(&rows).with(Style::ascii_rounded()).to_string();
+    println!("{}", table);
+    println!(
+        "\n{} Found {} model(s) from {} provider(s)",
+        "[=]".blue(),
+        rows.len().to_string().yellow(),
+        rows.iter()
+            .map(|r| r.provider.clone())
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+            .to_string()
+            .yellow()
+    );
+
+    Ok(())
+}
