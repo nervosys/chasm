@@ -490,7 +490,7 @@ For security issues, please see our [Security Policy](SECURITY.md).
 ## 📞 Support
 
 - 📖 [Documentation](https://docs.rs/chasm-cli)
-- 💬 [GitHub Discussions](https://github.com/nervosys/chasm-cli/discussions)
+- 💬 [GitHub Issues](https://github.com/nervosys/chasm-cli/issues)
 - 🐛 [Issue Tracker](https://github.com/nervosys/chasm-cli/issues)
 
 ---
