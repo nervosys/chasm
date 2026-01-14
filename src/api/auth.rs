@@ -6,8 +6,11 @@
 //! for the CSM ecosystem (csm-rust, csm-web, csm-app).
 
 use actix_web::{dev::Payload, web, FromRequest, HttpMessage, HttpRequest, HttpResponse};
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
 use chrono::{Duration, Utc};
-use argon2::{password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString}, Argon2};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use rusqlite::OptionalExtension;
 use serde::{Deserialize, Serialize};
@@ -32,7 +35,9 @@ static JWT_SECRET: Lazy<Vec<u8>> = Lazy::new(|| {
             s.into_bytes()
         })
         .unwrap_or_else(|_| {
-            eprintln!("[ERROR] CSM_JWT_SECRET environment variable is required for authentication.");
+            eprintln!(
+                "[ERROR] CSM_JWT_SECRET environment variable is required for authentication."
+            );
             eprintln!("        Generate one with: openssl rand -base64 32");
             // Return empty vec - will cause auth to fail gracefully
             Vec::new()
@@ -384,12 +389,12 @@ pub fn verify_password(password: &str, hash: &str) -> bool {
         // Users with legacy hashes should reset their passwords
         return false;
     }
-    
+
     let parsed_hash = match PasswordHash::new(hash) {
         Ok(h) => h,
         Err(_) => return false,
     };
-    
+
     Argon2::default()
         .verify_password(password.as_bytes(), &parsed_hash)
         .is_ok()
