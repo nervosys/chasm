@@ -1,24 +1,41 @@
 <p align="center">
-  <h1 align="center">🗄️ Chat System Manager (Chasm)</h1>
-  <p align="center">
-    <strong>Universal Chat and Agentic AI System Manager</strong><br>
-    Harvest, merge, and recover your AI chat and agent task histories
-    <br>
-    <br>
-    Bridging the divide between AI providers!
-  </p>
+  <img src="assets/logo.svg" alt="Chasm Logo" width="180" height="180">
+</p>
+
+<h1 align="center">Chasm</h1>
+
+<p align="center">
+  <strong>Universal Chat & Agentic AI System Manager</strong><br>
+  <em>Harvest, merge, and recover your AI chat and agent task histories</em>
 </p>
 
 <p align="center">
-  <a href="https://crates.io/crates/chasm-cli"><img src="https://img.shields.io/crates/v/chasm-cli.svg" alt="Crates.io"></a>
-  <a href="https://docs.rs/chasm-cli"><img src="https://docs.rs/chasm-cli/badge.svg" alt="Documentation"></a>
-  <a href="https://github.com/nervosys/chasm-cli/actions"><img src="https://github.com/nervosys/chasm-cli/workflows/CI/badge.svg" alt="CI Status"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License"></a>
+  <a href="https://crates.io/crates/chasm-cli"><img src="https://img.shields.io/crates/v/chasm-cli.svg?style=flat-square&logo=rust&logoColor=white&color=orange" alt="Crates.io"></a>
+  <a href="https://docs.rs/chasm-cli"><img src="https://img.shields.io/docsrs/chasm-cli?style=flat-square&logo=docs.rs&logoColor=white" alt="Documentation"></a>
+  <a href="https://github.com/nervosys/chasm-cli/actions"><img src="https://img.shields.io/github/actions/workflow/status/nervosys/chasm-cli/ci.yml?style=flat-square&logo=github&logoColor=white&label=CI" alt="CI Status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg?style=flat-square" alt="License"></a>
+  <a href="https://github.com/nervosys/chasm-cli/releases"><img src="https://img.shields.io/github/v/release/nervosys/chasm-cli?style=flat-square&logo=github&logoColor=white&label=release" alt="Release"></a>
 </p>
+
+<p align="center">
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-features">Features</a> •
+  <a href="#-installation">Installation</a> •
+  <a href="#-documentation">Docs</a> •
+  <a href="#-contributing">Contributing</a>
+</p>
+
+<br>
+
+<p align="center">
+  <img src="assets/demo.svg" alt="Chasm Demo" width="850">
+</p>
+
+<br>
 
 ---
 
-**Chasm** extracts and unifies chat sessions from AI coding assistants like GitHub Copilot, Cursor, and more. Never lose your AI conversations again.
+**Chasm** bridges the divide between AI providers by extracting and unifying chat sessions from AI coding assistants like GitHub Copilot, Cursor, and more. Never lose your AI conversations again.
 
 ## ✨ Features
 
@@ -490,12 +507,12 @@ For security issues, please see our [Security Policy](SECURITY.md).
 
 Chasm underwent a comprehensive security audit in January 2026 against industry frameworks:
 
-| Framework | Status | Notes |
-|-----------|--------|-------|
-| **CVE/RustSec** | ✅ Pass | No direct vulnerabilities |
+| Framework        | Status      | Notes                           |
+| ---------------- | ----------- | ------------------------------- |
+| **CVE/RustSec**  | ✅ Pass      | No direct vulnerabilities       |
 | **MITRE ATT&CK** | ✅ Mitigated | Command execution requires auth |
-| **NIST FIPS** | ✅ Compliant | Argon2id password hashing |
-| **CMMC 2.0** | ✅ Compliant | Authentication hardened |
+| **NIST FIPS**    | ✅ Compliant | Argon2id password hashing       |
+| **CMMC 2.0**     | ✅ Compliant | Authentication hardened         |
 
 **Key Security Features:**
 - 🔐 **Argon2id** password hashing (OWASP recommended)
@@ -504,16 +521,36 @@ Chasm underwent a comprehensive security audit in January 2026 against industry 
 - 🔒 **DPAPI/Keychain** integration for credential access
 
 **Dependencies:** 2 transitive warnings from `ratatui` (TUI framework) - compile-time only, no runtime risk.
+
 ## 📞 Support
 
 - 📖 [Documentation](https://docs.rs/chasm-cli)
-- 💬 [GitHub Issues](https://github.com/nervosys/chasm-cli/issues)
+- 💬 [GitHub Discussions](https://github.com/nervosys/chasm-cli/discussions)
 - 🐛 [Issue Tracker](https://github.com/nervosys/chasm-cli/issues)
+- 📧 [Email Support](mailto:support@nervosys.com)
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📜 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://nervosys.ai">Nervosys</a>
+  <sub>Built with 🦀 Rust by <a href="https://nervosys.ai">Nervosys</a></sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/nervosys/chasm-cli/stargazers">⭐ Star us on GitHub</a>
 </p>
 
 
