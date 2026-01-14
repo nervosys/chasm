@@ -44,6 +44,7 @@
 
 pub mod agency;
 pub mod browser;
+pub mod colors;
 pub mod cli;
 pub mod commands;
 pub mod database;
@@ -57,6 +58,7 @@ pub mod tui;
 pub mod workspace;
 
 // Re-export commonly used items
+pub use colors::{Status, StyledText, separator, line};
 pub use cli::{
     Cli, Commands, ExportCommands, FetchCommands, FindCommands, GitCommands, ImportCommands,
     ListCommands, MergeCommands, MigrationCommands, MoveCommands, ProviderCommands, RunCommands,
@@ -80,3 +82,5 @@ pub use workspace::{
     get_chat_sessions_from_workspace, get_workspace_by_hash, get_workspace_by_path,
     get_workspace_storage_path, normalize_path,
 };
+
+
