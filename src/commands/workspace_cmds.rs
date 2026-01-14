@@ -74,14 +74,22 @@ pub fn list_workspaces() -> Result<()> {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    
+
     println!("{}", colored_table.dimmed());
-    println!("\n{} Total workspaces: {}", "[=]".blue(), workspaces.len().to_string().yellow());
+    println!(
+        "\n{} Total workspaces: {}",
+        "[=]".blue(),
+        workspaces.len().to_string().yellow()
+    );
 
     // Show empty window sessions count (ALL SESSIONS)
     if let Ok(empty_count) = crate::storage::count_empty_window_sessions() {
         if empty_count > 0 {
-            println!("{} Empty window sessions (ALL SESSIONS): {}", "[i]".cyan(), empty_count.to_string().yellow());
+            println!(
+                "{} Empty window sessions (ALL SESSIONS): {}",
+                "[i]".cyan(),
+                empty_count.to_string().yellow()
+            );
         }
     }
 
@@ -171,7 +179,11 @@ pub fn list_sessions(project_path: Option<&str>) -> Result<()> {
     let table = Table::new(&rows).with(Style::ascii_rounded()).to_string();
 
     println!("{}", table.dimmed());
-    println!("\n{} Total sessions: {}", "[=]".blue(), rows.len().to_string().yellow());
+    println!(
+        "\n{} Total sessions: {}",
+        "[=]".blue(),
+        rows.len().to_string().yellow()
+    );
 
     Ok(())
 }
@@ -203,7 +215,11 @@ pub fn find_workspaces(pattern: &str) -> Result<()> {
         .collect();
 
     if matching.is_empty() {
-        println!("{} No workspaces found matching '{}'", "[!]".yellow(), pattern.cyan());
+        println!(
+            "{} No workspaces found matching '{}'",
+            "[!]".yellow(),
+            pattern.cyan()
+        );
         return Ok(());
     }
 
@@ -227,7 +243,11 @@ pub fn find_workspaces(pattern: &str) -> Result<()> {
     let table = Table::new(rows).with(Style::ascii_rounded()).to_string();
 
     println!("{}", table);
-    println!("\n{} Found {} matching workspace(s)", "[=]".blue(), matching.len().to_string().yellow());
+    println!(
+        "\n{} Found {} matching workspace(s)",
+        "[=]".blue(),
+        matching.len().to_string().yellow()
+    );
 
     // Show session paths for each matching workspace
     for ws in &matching {
@@ -342,7 +362,11 @@ pub fn find_sessions(pattern: &str, project_path: Option<&str>) -> Result<()> {
     let table = Table::new(&rows).with(Style::ascii_rounded()).to_string();
 
     println!("{}", table);
-    println!("\n{} Found {} matching session(s)", "[=]".blue(), rows.len().to_string().yellow());
+    println!(
+        "\n{} Found {} matching session(s)",
+        "[=]".blue(),
+        rows.len().to_string().yellow()
+    );
 
     Ok(())
 }
@@ -868,10 +892,3 @@ pub fn show_session(session_id: &str, project_path: Option<&str>) -> Result<()> 
     );
     Ok(())
 }
-
-
-
-
-
-
-
