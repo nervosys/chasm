@@ -20,62 +20,62 @@ use colored::{ColoredString, Colorize};
 pub struct Status;
 
 impl Status {
-    /// Success indicator: [OK] in green
+    /// Success indicator: `[OK]` in green
     pub fn ok() -> ColoredString {
         "[OK]".green()
     }
 
-    /// Info indicator: [i] in cyan
+    /// Info indicator: `[i]` in cyan
     pub fn info() -> ColoredString {
         "[i]".cyan()
     }
 
-    /// Warning indicator: [!] in yellow/orange
+    /// Warning indicator: `[!]` in yellow/orange
     pub fn warn() -> ColoredString {
         "[!]".yellow()
     }
 
-    /// Error indicator: [X] in red
+    /// Error indicator: `[X]` in red
     pub fn error() -> ColoredString {
         "[X]".red()
     }
 
-    /// Progress/fetch indicator: [<] in blue
+    /// Progress/fetch indicator: `[<]` in blue
     pub fn fetch() -> ColoredString {
         "[<]".blue()
     }
 
-    /// Action indicator: [>] in yellow
+    /// Action indicator: `[>]` in yellow
     pub fn action() -> ColoredString {
         "[>]".yellow()
     }
 
-    /// Index/register indicator: [#] in blue
+    /// Index/register indicator: `[#]` in blue
     pub fn index() -> ColoredString {
         "[#]".blue()
     }
 
-    /// Detail indicator: [*] in blue
+    /// Detail indicator: `[*]` in blue
     pub fn detail() -> ColoredString {
         "[*]".blue()
     }
 
-    /// Summary indicator: [=] in blue
+    /// Summary indicator: `[=]` in blue
     pub fn summary() -> ColoredString {
         "[=]".blue()
     }
 
-    /// Detect indicator: [D] in blue bold
+    /// Detect indicator: `[D]` in blue bold
     pub fn detect() -> ColoredString {
         "[D]".blue().bold()
     }
 
-    /// Add/found indicator: [+] in green bold
+    /// Add/found indicator: `[+]` in green bold
     pub fn add() -> ColoredString {
         "[+]".green().bold()
     }
 
-    /// Package/restore indicator: [P] in blue
+    /// Package/restore indicator: `[P]` in blue
     pub fn package() -> ColoredString {
         "[P]".blue()
     }
