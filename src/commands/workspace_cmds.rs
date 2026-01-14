@@ -17,7 +17,7 @@ struct WorkspaceRow {
     #[tabled(rename = "Project Path")]
     project_path: String,
     #[tabled(rename = "Sessions")]
-    sessions: usize,
+    sessions: String,
     #[tabled(rename = "Has Chats")]
     has_chats: String,
 }
@@ -46,36 +46,25 @@ pub fn list_workspaces() -> Result<()> {
     let rows: Vec<WorkspaceRow> = workspaces
         .iter()
         .map(|ws| WorkspaceRow {
-            hash: format!("{}...", &ws.hash[..12.min(ws.hash.len())]),
+            hash: format!(
+                "{}",
+                format!("{}...", &ws.hash[..12.min(ws.hash.len())]).cyan()
+            ),
             project_path: ws
                 .project_path
                 .clone()
                 .unwrap_or_else(|| "(none)".to_string()),
-            sessions: ws.chat_session_count,
+            sessions: format!("{}", ws.chat_session_count.to_string().green()),
             has_chats: if ws.has_chat_sessions {
-                "Yes".to_string()
+                format!("{}", "Yes".green())
             } else {
-                "No".to_string()
+                format!("{}", "No".red())
             },
         })
         .collect();
 
     let table = Table::new(rows).with(Style::ascii_rounded()).to_string();
-
-    // Color table borders dim for Tokyo Night theme
-    let colored_table = table
-        .lines()
-        .map(|line| {
-            if line.starts_with('.') || line.starts_with('|') || line.starts_with(':') {
-                format!("{}", line.dimmed())
-            } else {
-                line.to_string()
-            }
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    println!("{}", colored_table.dimmed());
+    println!("{}", table);
     println!(
         "\n{} Total workspaces: {}",
         "[=]".blue(),
@@ -226,16 +215,19 @@ pub fn find_workspaces(pattern: &str) -> Result<()> {
     let rows: Vec<WorkspaceRow> = matching
         .iter()
         .map(|ws| WorkspaceRow {
-            hash: format!("{}...", &ws.hash[..12.min(ws.hash.len())]),
+            hash: format!(
+                "{}",
+                format!("{}...", &ws.hash[..12.min(ws.hash.len())]).cyan()
+            ),
             project_path: ws
                 .project_path
                 .clone()
                 .unwrap_or_else(|| "(none)".to_string()),
-            sessions: ws.chat_session_count,
+            sessions: format!("{}", ws.chat_session_count.to_string().green()),
             has_chats: if ws.has_chat_sessions {
-                "Yes".to_string()
+                format!("{}", "Yes".green())
             } else {
-                "No".to_string()
+                format!("{}", "No".red())
             },
         })
         .collect();
