@@ -7,10 +7,10 @@
 
 use actix_web::{dev::Payload, web, FromRequest, HttpMessage, HttpRequest, HttpResponse};
 use chrono::{Duration, Utc};
+use argon2::{password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString}, Argon2};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use rusqlite::OptionalExtension;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::future::{ready, Ready};
 use uuid::Uuid;
 
@@ -21,17 +21,22 @@ use uuid::Uuid;
 /// JWT secret key - in production, this should come from environment variables
 use once_cell::sync::Lazy;
 
-/// JWT secret key - uses CSM_JWT_SECRET environment variable or a development default
-/// WARNING: Always set CSM_JWT_SECRET in production!
+/// JWT secret key - MUST be set via CSM_JWT_SECRET environment variable
+/// Minimum 32 characters recommended for security
 static JWT_SECRET: Lazy<Vec<u8>> = Lazy::new(|| {
     std::env::var("CSM_JWT_SECRET")
-        .unwrap_or_else(|_| {
-            eprintln!(
-                "[WARN] CSM_JWT_SECRET not set, using insecure default. Set this in production!"
-            );
-            "csm_dev_jwt_secret_change_me".to_string()
+        .map(|s| {
+            if s.len() < 32 {
+                eprintln!("[WARN] CSM_JWT_SECRET should be at least 32 characters for security");
+            }
+            s.into_bytes()
         })
-        .into_bytes()
+        .unwrap_or_else(|_| {
+            eprintln!("[ERROR] CSM_JWT_SECRET environment variable is required for authentication.");
+            eprintln!("        Generate one with: openssl rand -base64 32");
+            // Return empty vec - will cause auth to fail gracefully
+            Vec::new()
+        })
 });
 const JWT_EXPIRY_HOURS: i64 = 24;
 const REFRESH_TOKEN_EXPIRY_DAYS: i64 = 30;
@@ -358,12 +363,36 @@ pub struct UpgradeSubscriptionRequest {
 // Helper Functions
 // =============================================================================
 
-/// Hash a password using SHA-256 with salt
-pub fn hash_password(password: &str, salt: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(password.as_bytes());
-    hasher.update(salt.as_bytes());
-    format!("{:x}", hasher.finalize())
+/// Hash a password using Argon2id (OWASP recommended)
+/// The salt parameter is ignored - Argon2 generates its own secure salt
+/// Returns the PHC-formatted hash string which includes the salt
+pub fn hash_password(password: &str, _salt: &str) -> String {
+    let salt = SaltString::generate(&mut OsRng);
+    let argon2 = Argon2::default();
+    argon2
+        .hash_password(password.as_bytes(), &salt)
+        .map(|h| h.to_string())
+        .unwrap_or_else(|_| String::new())
+}
+
+/// Verify a password against an Argon2id hash
+/// Returns true if the password matches, false otherwise
+pub fn verify_password(password: &str, hash: &str) -> bool {
+    // Handle legacy SHA-256 hashes (64 hex characters without $)
+    if !hash.starts_with('$') && hash.len() == 64 {
+        // This is a legacy SHA-256 hash - cannot verify securely
+        // Users with legacy hashes should reset their passwords
+        return false;
+    }
+    
+    let parsed_hash = match PasswordHash::new(hash) {
+        Ok(h) => h,
+        Err(_) => return false,
+    };
+    
+    Argon2::default()
+        .verify_password(password.as_bytes(), &parsed_hash)
+        .is_ok()
 }
 
 /// Generate a JWT access token
@@ -721,7 +750,7 @@ pub async fn login(
         email,
         display_name,
         stored_hash,
-        salt,
+        _salt, // Salt is embedded in Argon2 hash, kept for legacy compatibility
         tier_str,
         sub_expires,
         created_at,
@@ -739,9 +768,8 @@ pub async fn login(
         }
     };
 
-    // Verify password
-    let provided_hash = hash_password(&body.password, &salt);
-    if provided_hash != stored_hash {
+    // Verify password using Argon2id
+    if !verify_password(&body.password, &stored_hash) {
         return HttpResponse::Unauthorized().json(serde_json::json!({
             "success": false,
             "error": "Invalid email or password"
@@ -1080,7 +1108,7 @@ pub async fn change_password(
         |row| Ok((row.get(0)?, row.get(1)?)),
     );
 
-    let (stored_hash, salt) = match creds {
+    let (stored_hash, _salt) = match creds {
         Ok(c) => c,
         Err(_) => {
             return HttpResponse::NotFound().json(serde_json::json!({
@@ -1090,9 +1118,8 @@ pub async fn change_password(
         }
     };
 
-    // Verify current password
-    let current_hash = hash_password(&body.current_password, &salt);
-    if current_hash != stored_hash {
+    // Verify current password using Argon2id
+    if !verify_password(&body.current_password, &stored_hash) {
         return HttpResponse::Unauthorized().json(serde_json::json!({
             "success": false,
             "error": "Current password is incorrect"

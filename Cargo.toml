@@ -94,8 +94,8 @@ aes-gcm = "0.10"
 # JWT authentication
 jsonwebtoken = "9.3"
 
-# Password hashing
-sha2 = "0.10"
+# Password hashing (Argon2id - OWASP recommended)
+argon2 = "0.5"
 once_cell = "1.21.3"
 regex = "1.12.2"
 
@@ -125,4 +125,3 @@ lto = true
 codegen-units = 1
 strip = true
 # Optimize for size
-
