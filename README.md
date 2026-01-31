@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Chasm Logo" width="180" height="180">
+  <img src="assets/banner.png" alt="Chasm" width="180" height="180">
 </p>
-
-<h1 align="center">Chasm</h1>
 
 <p align="center">
   <strong>Universal Chat & Agentic AI System Manager</strong><br>
